@@ -1,46 +1,18 @@
 let alertIntervalId = null;
-let lastBoardQty = null;
-let lastCheckedTime = null;
+let latestURL = ""; // Asegúrate de que esta variable se actualice con el valor generado en el HTML
 
 function startAlerts() {
   if (alertIntervalId) {
-    alert("🔁 Ya está activa la alerta.");
+    alert("🟦 Ya está activa la alerta.");
     return;
   }
 
-  alert("✅ Se activará un aviso cada 5 minutos con revisión de yield.");
-  alertIntervalId = setInterval(async () => {
+  alert("✅ Se activará un aviso cada 5 minutos con el URL generado.");
+
+  alertIntervalId = setInterval(() => {
     if (latestURL) {
-      try {
-        const response = await fetch(latestURL);
-        const html = await response.text();
-
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const boardQtyMatch = html.match(/Board Qty<\/th>\s*<td[^>]*>(\d+)<\/td>/);
-
-        if (boardQtyMatch) {
-          const newBoardQty = parseInt(boardQtyMatch[1]);
-          const now = new Date();
-          const nowTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-          let message = `🕓 Revisión de Yield: ${nowTime}\nBoard Qty: ${newBoardQty}`;
-
-          if (lastBoardQty !== null) {
-            const diff = newBoardQty - lastBoardQty;
-            message += `\nCambio desde ${lastCheckedTime}: ${diff >= 0 ? "+" : ""}${diff}`;
-          }
-
-          alert(message);
-
-          lastBoardQty = newBoardQty;
-          lastCheckedTime = nowTime;
-        } else {
-          alert("⚠️ No se pudo leer Board Qty del HTML.");
-        }
-      } catch (error) {
-        alert("❌ Error al obtener datos del URL:\n" + error.message);
-      }
+      const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      alert(`🕒 Revisión de Yield (${now}):\n🔗 ${latestURL}`);
     } else {
       alert("⚠️ No se ha generado un URL todavía.");
     }
