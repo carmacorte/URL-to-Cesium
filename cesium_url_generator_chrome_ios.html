@@ -26,12 +26,10 @@
 <label for="uutTypes">UUT Types (coma):</label>
 <input type="text" id="uutTypes" placeholder="800-110045-01,800-110945-01" />
 
-<!-- 📦 Sección para grupos -->
-<div style="margin-top: 10px;">
-  <label><strong>Agregar por grupo:</strong></label><br>
-  <button onclick="agregarGrupo('CVEBU')">🧩 Agregar CVEBU</button>
-  <button onclick="limpiarUUT()">🧹 Limpiar</button>
-</div>
+<h3>Agregar por grupo:</h3>
+<button onclick="agregarCVEBU()">➕ Agregar CVEBU</button>
+<button onclick="agregarCRBU()">➕ Agregar CRBU</button>
+<button onclick="limpiarUUT()">🧹 Limpiar</button>
 
 <label for="location">Location:</label>
 <input type="text" id="location" value="FJZ" />
@@ -59,25 +57,32 @@ let alertIntervalId = null;
 
 const grupos = {
   CVEBU: [
-    "800-108480",
-    "800-109399",
-    "800-110045",
-    "800-110945",
-    "800-112271",
-    "800-137504",
-    "800-147504"
+    "800-108480-%", "800-109399-%", "800-110045-%",
+    "800-110945-%", "800-112271-%", "800-137504-%", "800-147504-%"
+  ],
+  CRBU: [
+    "80-LC0-36FH", "88-LC0-38FH-M", "8804-FC1", "8808-FC1"
   ]
 };
 
-function agregarGrupo(nombreGrupo) {
-  const lista = grupos[nombreGrupo];
-  if (!lista) return;
+function agregarCVEBU() {
+  agregarGrupo(grupos.CVEBU);
+}
 
+function agregarCRBU() {
+  agregarGrupo(grupos.CRBU);
+}
+
+function agregarGrupo(arr) {
   const input = document.getElementById("uutTypes");
-  const actuales = input.value ? input.value.split(",").map(v => v.trim()) : [];
-  const nuevos = lista.map(x => `${x}-%`);
-  const combinados = [...new Set([...actuales, ...nuevos])];
-  input.value = combinados.join(",");
+  let existentes = input.value.split(",").map(x => x.trim()).filter(x => x !== "");
+  let nuevos = [...existentes];
+
+  arr.forEach(item => {
+    if (!existentes.includes(item)) nuevos.push(item);
+  });
+
+  input.value = nuevos.join(",");
 }
 
 function limpiarUUT() {
@@ -132,7 +137,7 @@ function startAlerts() {
     } else {
       alert("⚠️ No se ha generado un URL todavía.");
     }
-  }, 5 * 60 * 1000);
+  }, 5 * 60 * 1000); // 5 minutos
 }
 
 function stopAlerts() {
