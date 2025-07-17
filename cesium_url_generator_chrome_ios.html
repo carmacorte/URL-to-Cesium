@@ -1,33 +1,26 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Redirección automática a Cesium</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body style="font-family:sans-serif; max-width:500px; margin:auto; padding:20px;">
-  <h2>Redirigiendo a Cesium Lookup...</h2>
-  <p>Si no se abre automáticamente, haz clic en el siguiente enlace:</p>
-  <a id="openLink" href="#" target="_blank">🔗 Abrir URL manualmente</a><br><br>
-  <label>URL generada:</label><br>
-  <textarea id="result" rows="4" style="width:100%; font-size:14px" readonly></textarea>
+<script>
+  const uutInput = document.getElementById('uut');
+  const locationInput = document.getElementById('location');
+  const fromDateInput = document.getElementById('fromDate');
+  const toDateInput = document.getElementById('toDate');
+  const resultInput = document.getElementById('result');
+  const openLink = document.getElementById('openLink');
 
-  <script>
-    const uut = "800-110045-01,800-110945-01";
-    const location = "FJZ";
-    const fromDate = new Date().toISOString().split('T')[0];  // hoy
-    const toDate = fromDate;
+  function updateURL() {
+    const uut = encodeURIComponent(uutInput.value.trim());
+    const location = encodeURIComponent(locationInput.value.trim());
+    const fromDate = fromDateInput.value;
+    const toDate = toDateInput.value;
 
-    const encodedUUT = encodeURIComponent(uut.trim());
-    const encodedLoc = encodeURIComponent(location.trim());
+    const url = `https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?SI=${uut}&SD=${fromDate}&ED=${toDate}&datetype=nodate&yieldtype=firstpass&yielddatetype=rectime&location=${location}&timezone=US%2FMountain`;
 
-    const url = `https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?SI=${encodedUUT}&SD=${fromDate}&ED=${toDate}&datetype=nodate&yieldtype=firstpass&yielddatetype=rectime&location=${encodedLoc}&timezone=US%2FMountain`;
+    resultInput.value = url;
+    openLink.href = url;
 
-    document.getElementById("result").value = url;
-    document.getElementById("openLink").href = url;
-
-    // Redirección automática
+    // 🚨 Redirige automáticamente (solo al cargar la página)
     window.location.href = url;
-  </script>
-</body>
-</html>
+  }
+
+  // Ejecutar al cargar
+  window.onload = updateURL;
+</script>
