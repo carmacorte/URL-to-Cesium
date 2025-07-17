@@ -1,5 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Generador de URL para Cesium (FJZ)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    input, button, textarea {
+      margin: 10px 0;
+      padding: 5px;
+      width: 100%;
+    }
+    button {
+      width: auto;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Cesium Lookup Generator</h2>
+
+<label for="uutTypes">UUT Types (coma):</label>
+<input type="text" id="uutTypes" placeholder="800-110045-01,800-110945-01" />
+
+<label for="location">Location:</label>
+<input type="text" id="location" value="FJZ" />
+
+<label for="fromDate">From Date:</label>
+<input type="date" id="fromDate" />
+
+<label for="toDate">To Date:</label>
+<input type="date" id="toDate" />
+
+<button onclick="generateURL()">🎯 Generar URL</button>
+
+<h3>Resultado:</h3>
+<textarea id="resultURL" rows="3" readonly></textarea>
+<br>
+<button onclick="copyURL()">📋 Copiar URL</button>
+<button onclick="openURL()">🌐 Abrir en navegador</button>
+<br><br>
+<button onclick="startAlerts()">⏰ Activar alerta cada 5 min</button>
+<button onclick="stopAlerts()">⛔ Detener alerta</button>
+
+<script>
+let latestURL = "";
 let alertIntervalId = null;
-let latestURL = ""; // Asegúrate de que esta variable se actualice con el valor generado en el HTML
+
+function generateURL() {
+  const uut = document.getElementById("uutTypes").value.trim();
+  const location = document.getElementById("location").value.trim();
+  const from = document.getElementById("fromDate").value;
+  const to = document.getElementById("toDate").value;
+
+  if (!uut || !from || !to) {
+    alert("⚠️ Por favor llena todos los campos.");
+    return;
+  }
+
+  const encodedUUT = encodeURIComponent(uut);
+  const encodedLoc = encodeURIComponent(location);
+
+  latestURL = `https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?SI=${encodedUUT},${encodedLoc}&SD=${from}&ED=${to}&datetype=nodate&yieldtype=firstpass&yielddatetype=rectime&uuttype=${encodedUUT}&location=${encodedLoc}&timezone=US%2FMountain`;
+
+  document.getElementById("resultURL").value = latestURL;
+}
+
+function copyURL() {
+  const urlBox = document.getElementById("resultURL");
+  urlBox.select();
+  document.execCommand("copy");
+  alert("📋 URL copiada al portapapeles.");
+}
+
+function openURL() {
+  if (latestURL) {
+    window.open(latestURL, "_blank");
+  } else {
+    alert("⚠️ Genera una URL primero.");
+  }
+}
 
 function startAlerts() {
   if (alertIntervalId) {
@@ -8,7 +91,6 @@ function startAlerts() {
   }
 
   alert("✅ Se activará un aviso cada 5 minutos con el URL generado.");
-
   alertIntervalId = setInterval(() => {
     if (latestURL) {
       const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -16,7 +98,7 @@ function startAlerts() {
     } else {
       alert("⚠️ No se ha generado un URL todavía.");
     }
-  }, 5 * 60 * 1000); // 5 minutos = 300000 ms
+  }, 5 * 60 * 1000); // 5 minutos
 }
 
 function stopAlerts() {
@@ -26,3 +108,7 @@ function stopAlerts() {
     alert("🛑 Alerta detenida.");
   }
 }
+</script>
+
+</body>
+</html>
