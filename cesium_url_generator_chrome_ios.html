@@ -1,65 +1,33 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Cesium URL Generator - Chrome & iOS Compatible</title>
+  <title>Redirección automática a Cesium</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="font-family:sans-serif;max-width:500px;margin:auto;padding:20px">
-  <h2>🔗 Cesium Lookup Generator</h2>
-
-  <label>UUT Types (coma):</label><br>
-  <input type="text" id="uut" value="800-110045-01,800-110945-01" style="width:100%;font-size:16px"><br><br>
-
-  <label>Location:</label><br>
-  <input type="text" id="loc" value="FJZ" style="width:100%;font-size:16px"><br><br>
-
-  <label>From Date:</label><br>
-  <input type="date" id="start" value="2025-07-01" style="width:100%;font-size:16px"><br><br>
-
-  <label>To Date:</label><br>
-  <input type="date" id="end" value="2025-07-08" style="width:100%;font-size:16px"><br><br>
-
-  <button onclick="generateURL()" style="width:100%;font-size:18px;padding:10px">🎯 Generar URL</button><br><br>
-
-  <div style="font-size:16px">
-    <strong>Resultado:</strong><br>
-    <textarea id="result" rows="4" style="width:100%;font-size:14px" readonly></textarea><br><br>
-    <button onclick="copyToClipboard()" style="width:100%;font-size:16px">📋 Copiar URL</button><br><br>
-    <a id="openLink" href="#" target="_blank" style="display:none;color:blue;font-size:16px">🔗 Abrir URL en nueva pestaña</a>
-  </div>
+<body style="font-family:sans-serif; max-width:500px; margin:auto; padding:20px;">
+  <h2>Redirigiendo a Cesium Lookup...</h2>
+  <p>Si no se abre automáticamente, haz clic en el siguiente enlace:</p>
+  <a id="openLink" href="#" target="_blank">🔗 Abrir URL manualmente</a><br><br>
+  <label>URL generada:</label><br>
+  <textarea id="result" rows="4" style="width:100%; font-size:14px" readonly></textarea>
 
   <script>
-    function generateURL() {
-      const uut = document.getElementById("uut").value;
-      const loc = document.getElementById("loc").value;
-      const start = document.getElementById("start").value;
-      const end = document.getElementById("end").value;
-      const base = "https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield";
+    const uut = "800-110045-01,800-110945-01";
+    const location = "FJZ";
+    const fromDate = new Date().toISOString().split('T')[0];  // hoy
+    const toDate = fromDate;
 
-      const url = base + "?SI=" + encodeURIComponent(uut) + "," + loc +
-                  "&SD=" + start +
-                  "&ED=" + end +
-                  "&datetype=nodate&yieldtype=firstpass&yielddatetype=rectime" +
-                  "&uuttype=" + encodeURIComponent(uut) +
-                  "&location=" + loc +
-                  "&timezone=US%2FMountain";
+    const encodedUUT = encodeURIComponent(uut.trim());
+    const encodedLoc = encodeURIComponent(location.trim());
 
-      document.getElementById("result").value = url;
-      const link = document.getElementById("openLink");
-      link.href = url;
-      link.style.display = "inline";
-      link.textContent = "🔗 Abrir URL en nueva pestaña";
-    }
+    const url = `https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?SI=${encodedUUT}&SD=${fromDate}&ED=${toDate}&datetype=nodate&yieldtype=firstpass&yielddatetype=rectime&location=${encodedLoc}&timezone=US%2FMountain`;
 
-    function copyToClipboard() {
-      const resultBox = document.getElementById("result");
-      resultBox.select();
-      resultBox.setSelectionRange(0, 99999);
-      document.execCommand("copy");
-      alert("URL copiada al portapapeles 📋");
-    }
+    document.getElementById("result").value = url;
+    document.getElementById("openLink").href = url;
+
+    // Redirección automática
+    window.location.href = url;
   </script>
 </body>
 </html>
