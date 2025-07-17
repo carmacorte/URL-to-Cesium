@@ -1,33 +1,36 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Redirección automática a Cesium</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Redirigiendo a Cesium Lookup</title>
 </head>
-<body style="font-family:sans-serif; max-width:500px; margin:auto; padding:20px;">
-  <h2>Redirigiendo a Cesium Lookup...</h2>
+<body style="font-family:sans-serif;max-width:600px;margin:auto;padding:20px;text-align:center;">
+  <h2>Redirigiendo a <strong>Cesium Lookup</strong>...</h2>
   <p>Si no se abre automáticamente, haz clic en el siguiente enlace:</p>
-  <a id="openLink" href="#" target="_blank">🔗 Abrir URL manualmente</a><br><br>
-  <label>URL generada:</label><br>
-  <textarea id="result" rows="4" style="width:100%; font-size:14px" readonly></textarea>
+  <p>
+    <a id="manualLink" href="#" target="_blank" style="font-size:18px;color:blue;">🔗 Abrir URL manualmente</a>
+  </p>
+
+  <p>URL generada:</p>
+  <textarea id="urlBox" style="width:100%;height:80px;font-size:14px;"></textarea>
 
   <script>
-    const uut = "800-110045-01,800-110945-01";
-    const location = "FJZ";
-    const fromDate = new Date().toISOString().split('T')[0];  // hoy
-    const toDate = fromDate;
+    window.onload = function () {
+      const uut = "800-110045-01,800-110945-01";
+      const location = "FJZ";
+      const fromDate = new Date().toISOString().slice(0, 10);
+      const toDate = fromDate;
 
-    const encodedUUT = encodeURIComponent(uut.trim());
-    const encodedLoc = encodeURIComponent(location.trim());
+      const url = `https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?SI=${encodeURIComponent(uut)}&SD=${fromDate}&ED=${toDate}&datetype=nodate&yieldtype=firstpass&yielddatetype=rectime&uuttype=${encodeURIComponent(uut)}&location=${location}&timezone=US%2FMountain`;
 
-    const url = `https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?SI=${encodedUUT}&SD=${fromDate}&ED=${toDate}&datetype=nodate&yieldtype=firstpass&yielddatetype=rectime&location=${encodedLoc}&timezone=US%2FMountain`;
+      document.getElementById("urlBox").value = url;
+      const manualLink = document.getElementById("manualLink");
+      manualLink.href = url;
 
-    document.getElementById("result").value = url;
-    document.getElementById("openLink").href = url;
-
-    // Redirección automática
-    window.location.href = url;
+      // Redirección automática
+      window.location.href = url;
+    };
   </script>
 </body>
 </html>
