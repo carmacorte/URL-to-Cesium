@@ -1,0 +1,26 @@
+<script>
+  const uutInput = document.getElementById('uut');
+  const locationInput = document.getElementById('location');
+  const fromDateInput = document.getElementById('fromDate');
+  const toDateInput = document.getElementById('toDate');
+  const resultInput = document.getElementById('result');
+  const openLink = document.getElementById('openLink');
+
+  function updateURL() {
+    const uut = encodeURIComponent(uutInput.value.trim());
+    const location = encodeURIComponent(locationInput.value.trim());
+    const fromDate = fromDateInput.value;
+    const toDate = toDateInput.value;
+
+    const url = `https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?SI=${uut}&SD=${fromDate}&ED=${toDate}&datetype=nodate&yieldtype=firstpass&yielddatetype=rectime&location=${location}&timezone=US%2FMountain`;
+
+    resultInput.value = url;
+    openLink.href = url;
+
+    // 🚨 Redirige automáticamente (solo al cargar la página)
+    window.location.href = url;
+  }
+
+  // Ejecutar al cargar
+  window.onload = updateURL;
+</script>
