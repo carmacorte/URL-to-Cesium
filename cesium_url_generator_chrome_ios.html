@@ -26,6 +26,13 @@
 <label for="uutTypes">UUT Types (coma):</label>
 <input type="text" id="uutTypes" placeholder="800-110045-01,800-110945-01" />
 
+<!-- 📦 Sección para grupos -->
+<div style="margin-top: 10px;">
+  <label><strong>Agregar por grupo:</strong></label><br>
+  <button onclick="agregarGrupo('CVEBU')">🧩 Agregar CVEBU</button>
+  <button onclick="limpiarUUT()">🧹 Limpiar</button>
+</div>
+
 <label for="location">Location:</label>
 <input type="text" id="location" value="FJZ" />
 
@@ -49,6 +56,33 @@
 <script>
 let latestURL = "";
 let alertIntervalId = null;
+
+const grupos = {
+  CVEBU: [
+    "800-108480",
+    "800-109399",
+    "800-110045",
+    "800-110945",
+    "800-112271",
+    "800-137504",
+    "800-147504"
+  ]
+};
+
+function agregarGrupo(nombreGrupo) {
+  const lista = grupos[nombreGrupo];
+  if (!lista) return;
+
+  const input = document.getElementById("uutTypes");
+  const actuales = input.value ? input.value.split(",").map(v => v.trim()) : [];
+  const nuevos = lista.map(x => `${x}-%`);
+  const combinados = [...new Set([...actuales, ...nuevos])];
+  input.value = combinados.join(",");
+}
+
+function limpiarUUT() {
+  document.getElementById("uutTypes").value = "";
+}
 
 function generateURL() {
   const uut = document.getElementById("uutTypes").value.trim();
@@ -98,7 +132,7 @@ function startAlerts() {
     } else {
       alert("⚠️ No se ha generado un URL todavía.");
     }
-  }, 5 * 60 * 1000); // 5 minutos
+  }, 5 * 60 * 1000);
 }
 
 function stopAlerts() {
