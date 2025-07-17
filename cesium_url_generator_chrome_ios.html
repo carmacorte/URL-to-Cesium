@@ -1,65 +1,81 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Generador de URL para Cesium</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cesium URL Generator (FJZ only)</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    label { display: block; margin-top: 10px; }
-    input, button { font-size: 16px; padding: 5px; width: 100%; }
-    textarea { width: 100%; height: 60px; margin-top: 10px; }
-    .alerta {
-      margin-top: 20px;
-      color: red;
-      font-weight: bold;
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input {
+      padding: 6px;
+      width: 100%;
+      max-width: 400px;
+      margin-bottom: 10px;
+    }
+    textarea {
+      width: 100%;
+      height: 80px;
+    }
+    a {
+      display: inline-block;
+      margin-top: 10px;
+      background-color: #007bff;
+      color: white;
+      padding: 8px 12px;
+      text-decoration: none;
+      border-radius: 4px;
     }
   </style>
 </head>
 <body>
-  <h2>Generador de URL para Cesium Lookup</h2>
+  <h1>Generador de URL para Cesium (solo FJZ)</h1>
 
-  <label>UUTtype (ej: 73-102226-06)</label>
-  <input type="text" id="uuttype" placeholder="Ejemplo: 73-102226-06" />
+  <label for="uut">UUT Type (separado por comas si son varios):</label>
+  <input type="text" id="uut" placeholder="Ej: 73-102226-06,73-20176-06"/>
 
-  <label>Fecha de inicio (YYYY-MM-DD)</label>
-  <input type="date" id="startDate" />
+  <label for="fromDate">Fecha inicio:</label>
+  <input type="date" id="fromDate" />
 
-  <label>Fecha de fin (YYYY-MM-DD)</label>
-  <input type="date" id="endDate" />
+  <label for="toDate">Fecha fin:</label>
+  <input type="date" id="toDate" />
 
-  <button onclick="generarURL()">Generar URL</button>
+  <label for="result">URL generada:</label>
+  <textarea id="result" readonly></textarea>
+  <br />
 
-  <label>URL generada:</label>
-  <textarea id="outputURL" readonly></textarea>
-
-  <button onclick="abrirURL()">Abrir URL</button>
-
-  <div class="alerta">
-    ⚠️ Nota: Aunque uses location=Fjz, Cesium puede mostrar datos de otras plantas si el UUTtype fue procesado en ellas. Este generador intenta forzar el filtrado usando un parámetro adicional.
-  </div>
+  <a id="openLink" href="#" target="_blank">Abrir en navegador</a>
 
   <script>
-    function generarURL() {
-      const uut = document.getElementById("uuttype").value.trim();
-      const start = document.getElementById("startDate").value;
-      const end = document.getElementById("endDate").value;
-      if (!uut || !start || !end) {
-        alert("Por favor completa todos los campos.");
-        return;
-      }
+    const uutInput = document.getElementById('uut');
+    const fromDateInput = document.getElementById('fromDate');
+    const toDateInput = document.getElementById('toDate');
+    const resultInput = document.getElementById('result');
+    const openLink = document.getElementById('openLink');
 
-      const url = `https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?SI=${uut}&uuttype=${uut}&SD=${start}&ED=${end}&datetype=nodate&yieldtype=firstpass&yielddatetype=rectime&location=Fjz&timezone=US%2FMountain`;
-      document.getElementById("outputURL").value = url;
+    function updateURL() {
+      const uut = encodeURIComponent(uutInput.value.trim());
+      const fromDate = fromDateInput.value;
+      const toDate = toDateInput.value;
+
+      // Siempre fuerza la planta a FJZ
+      const location = "Fjz";
+
+      const url = `https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?SI=${uut}&SD=${fromDate}&ED=${toDate}&datetype=nodate&yieldtype=firstpass&yielddatetype=rectime&location=${location}&timezone=US%2FMountain`;
+
+      resultInput.value = url;
+      openLink.href = url;
     }
 
-    function abrirURL() {
-      const url = document.getElementById("outputURL").value;
-      if (url) {
-        window.open(url, "_blank");
-      } else {
-        alert("Genera primero la URL.");
-      }
-    }
+    uutInput.addEventListener('input', updateURL);
+    fromDateInput.addEventListener('change', updateURL);
+    toDateInput.addEventListener('change', updateURL);
   </script>
 </body>
 </html>
