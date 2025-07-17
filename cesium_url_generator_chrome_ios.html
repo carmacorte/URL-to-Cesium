@@ -3,71 +3,55 @@
 <head>
   <meta charset="UTF-8">
   <title>Generador de URL para Cesium (solo FJZ)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
-      font-family: sans-serif;
-      padding: 20px;
-    }
-    input, button, textarea {
-      width: 100%;
-      margin-top: 10px;
-      font-size: 1em;
-      padding: 5px;
-    }
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    input, button, textarea { width: 100%; margin: 10px 0; padding: 10px; font-size: 16px; }
+    label { font-weight: bold; }
+    #url { height: 80px; }
   </style>
 </head>
 <body>
   <h2>Generador de URL para Cesium (solo FJZ)</h2>
 
-  <label>UUT Type (separado por comas si son varios):</label>
-  <input type="text" id="uuttype" value="800-110945-01,800-110045-01" />
+  <label for="uuttype">UUT Type (separado por comas si son varios):</label>
+  <input type="text" id="uuttype" value="800-110945-01, 800-110045-01">
 
-  <label>Fecha inicio:</label>
-  <input type="date" id="startDate" />
+  <input type="checkbox" id="usarComodin">
+  <label for="usarComodin">Usar comodín "%" (para incluir todas las versiones del UUT)</label>
 
-  <label>Fecha fin:</label>
-  <input type="date" id="endDate" />
+  <label for="start">Fecha inicio:</label>
+  <input type="date" id="start" value="2025-07-16">
 
-  <label>URL generada:</label>
-  <textarea id="urlOutput" rows="4" readonly></textarea>
+  <label for="end">Fecha fin:</label>
+  <input type="date" id="end" value="2025-07-16">
 
-  <button onclick="abrir()">Abrir en navegador</button>
+  <label for="url">URL generada:</label>
+  <textarea id="url" readonly></textarea>
+
+  <button onclick="abrirURL()">Abrir en navegador</button>
 
   <script>
-    function encodeUUT(input) {
-      return input
-        .split(',')
-        .map(uut => uut.trim())
-        .join(',');
+    function abrirURL() {
+      const uutRaw = document.getElementById("uuttype").value.trim();
+      const usarComodin = document.getElementById("usarComodin").checked;
+      const start = document.getElementById("start").value;
+      const end = document.getElementById("end").value;
+
+      let uutFinal = uutRaw.replace(/\s/g, ''); // remueve espacios
+
+      if (usarComodin) {
+        uutFinal = uutFinal
+          .split(',')
+          .map(x => x.replace(/-([^-]*)$/, '-%25'))  // agrega % como comodín
+          .join(',');
+      }
+
+      const url = `https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?SI=${uutFinal},Fjz&SD=${start}&ED=${end}&datetype=nodate&yieldtype=firstpass&yielddatetype=rectime&uuttype=${uutFinal}&location=Fjz&timezone=US%2FMountain`;
+
+      document.getElementById("url").value = url;
+      window.open(url, '_blank');
     }
-
-    function abrir() {
-      const uuttype = encodeUUT(document.getElementById('uuttype').value);
-      const SD = document.getElementById('startDate').value;
-      const ED = document.getElementById('endDate').value;
-
-      const baseURL = "https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?";
-      const params = new URLSearchParams({
-        SI: `${uuttype},Fjz`,
-        SD: SD,
-        ED: ED,
-        datetype: 'nodate',
-        yieldtype: 'firstpass',
-        yielddatetype: 'rectime',
-        uuttype: uuttype,
-        location: 'Fjz',
-        timezone: 'US/Mountain'
-      });
-
-      const finalURL = baseURL + params.toString();
-      document.getElementById("urlOutput").value = finalURL;
-      window.open(finalURL, '_blank');
-    }
-
-    // Asignar fecha actual por defecto
-    const hoy = new Date().toISOString().split('T')[0];
-    document.getElementById("startDate").value = hoy;
-    document.getElementById("endDate").value = hoy;
   </script>
 </body>
 </html>
