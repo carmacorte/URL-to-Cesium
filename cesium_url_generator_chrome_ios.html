@@ -2,34 +2,58 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Redirigiendo a Cesium...</title>
+  <title>Generador de URL - Cesium</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 2rem;
+      margin: 2rem;
+    }
+    input, button, textarea {
+      font-size: 16px;
+      margin-top: 0.5rem;
+      width: 100%;
+    }
+    label {
+      font-weight: bold;
+      margin-top: 1rem;
+      display: block;
     }
   </style>
 </head>
 <body>
-  <h2>Redirigiendo a Cesium Lookup...</h2>
-  <p>Si no se abre automáticamente, haz clic en el siguiente enlace:</p>
-  <p><a id="openLink" href="#" target="_blank">🔗 Abrir URL manualmente</a></p>
-  <p><strong>URL generada:</strong></p>
-  <textarea id="result" rows="3" style="width: 100%"></textarea>
+  <h2>Generador de URL para Cesium</h2>
+
+  <label for="uut">UUT Type (separado por comas):</label>
+  <input type="text" id="uut" placeholder="Ej. 800-110045-01,800-110945-01" />
+
+  <label for="location">Location:</label>
+  <input type="text" id="location" placeholder="Ej. FJZ" />
+
+  <label for="fromDate">Fecha inicio:</label>
+  <input type="date" id="fromDate" />
+
+  <label for="toDate">Fecha fin:</label>
+  <input type="date" id="toDate" />
+
+  <button onclick="updateURL()">🔗 Generar URL</button>
+
+  <label for="result">URL generada:</label>
+  <textarea id="result" rows="3" readonly></textarea>
+
+  <p><a id="openLink" href="#" target="_blank">🌐 Abrir URL en nueva pestaña</a></p>
 
   <script>
-    const uut = "800-110045-01,800-110945-01";
-    const location = "FJZ";
-    const fromDate = "2025-07-16";
-    const toDate = "2025-07-16";
+    function updateURL() {
+      const uut = encodeURIComponent(document.getElementById('uut').value.trim());
+      const location = encodeURIComponent(document.getElementById('location').value.trim());
+      const fromDate = document.getElementById('fromDate').value;
+      const toDate = document.getElementById('toDate').value;
 
-    const url = `https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?SI=${encodeURIComponent(uut)}&SD=${fromDate}&ED=${toDate}&datetype=nodate&yieldtype=firstpass&yielddatetype=rectime&location=${location}&timezone=US%2FMountain`;
+      const url = `https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?SI=${uut}&SD=${fromDate}&ED=${toDate}&datetype=nodate&yieldtype=firstpass&yielddatetype=rectime&location=${location}&timezone=US%2FMountain`;
 
-    document.getElementById("result").value = url;
-    document.getElementById("openLink").href = url;
-
-    // Redirigir automáticamente
-    window.location.href = url;
+      document.getElementById('result').value = url;
+      document.getElementById('openLink').href = url;
+    }
   </script>
 </body>
 </html>
