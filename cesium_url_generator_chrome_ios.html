@@ -1,81 +1,73 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Cesium URL Generator (FJZ only)</title>
+  <meta charset="UTF-8">
+  <title>Generador de URL para Cesium (solo FJZ)</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
+      font-family: sans-serif;
+      padding: 20px;
     }
-    label {
-      display: block;
-      margin-top: 10px;
-    }
-    input {
-      padding: 6px;
+    input, button, textarea {
       width: 100%;
-      max-width: 400px;
-      margin-bottom: 10px;
-    }
-    textarea {
-      width: 100%;
-      height: 80px;
-    }
-    a {
-      display: inline-block;
       margin-top: 10px;
-      background-color: #007bff;
-      color: white;
-      padding: 8px 12px;
-      text-decoration: none;
-      border-radius: 4px;
+      font-size: 1em;
+      padding: 5px;
     }
   </style>
 </head>
 <body>
-  <h1>Generador de URL para Cesium (solo FJZ)</h1>
+  <h2>Generador de URL para Cesium (solo FJZ)</h2>
 
-  <label for="uut">UUT Type (separado por comas si son varios):</label>
-  <input type="text" id="uut" placeholder="Ej: 73-102226-06,73-20176-06"/>
+  <label>UUT Type (separado por comas si son varios):</label>
+  <input type="text" id="uuttype" value="800-110945-01,800-110045-01" />
 
-  <label for="fromDate">Fecha inicio:</label>
-  <input type="date" id="fromDate" />
+  <label>Fecha inicio:</label>
+  <input type="date" id="startDate" />
 
-  <label for="toDate">Fecha fin:</label>
-  <input type="date" id="toDate" />
+  <label>Fecha fin:</label>
+  <input type="date" id="endDate" />
 
-  <label for="result">URL generada:</label>
-  <textarea id="result" readonly></textarea>
-  <br />
+  <label>URL generada:</label>
+  <textarea id="urlOutput" rows="4" readonly></textarea>
 
-  <a id="openLink" href="#" target="_blank">Abrir en navegador</a>
+  <button onclick="abrir()">Abrir en navegador</button>
 
   <script>
-    const uutInput = document.getElementById('uut');
-    const fromDateInput = document.getElementById('fromDate');
-    const toDateInput = document.getElementById('toDate');
-    const resultInput = document.getElementById('result');
-    const openLink = document.getElementById('openLink');
-
-    function updateURL() {
-      const uut = encodeURIComponent(uutInput.value.trim());
-      const fromDate = fromDateInput.value;
-      const toDate = toDateInput.value;
-
-      // Siempre fuerza la planta a FJZ
-      const location = "Fjz";
-
-      const url = `https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?SI=${uut}&SD=${fromDate}&ED=${toDate}&datetype=nodate&yieldtype=firstpass&yielddatetype=rectime&location=${location}&timezone=US%2FMountain`;
-
-      resultInput.value = url;
-      openLink.href = url;
+    function encodeUUT(input) {
+      return input
+        .split(',')
+        .map(uut => uut.trim())
+        .join(',');
     }
 
-    uutInput.addEventListener('input', updateURL);
-    fromDateInput.addEventListener('change', updateURL);
-    toDateInput.addEventListener('change', updateURL);
+    function abrir() {
+      const uuttype = encodeUUT(document.getElementById('uuttype').value);
+      const SD = document.getElementById('startDate').value;
+      const ED = document.getElementById('endDate').value;
+
+      const baseURL = "https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?";
+      const params = new URLSearchParams({
+        SI: `${uuttype},Fjz`,
+        SD: SD,
+        ED: ED,
+        datetype: 'nodate',
+        yieldtype: 'firstpass',
+        yielddatetype: 'rectime',
+        uuttype: uuttype,
+        location: 'Fjz',
+        timezone: 'US/Mountain'
+      });
+
+      const finalURL = baseURL + params.toString();
+      document.getElementById("urlOutput").value = finalURL;
+      window.open(finalURL, '_blank');
+    }
+
+    // Asignar fecha actual por defecto
+    const hoy = new Date().toISOString().split('T')[0];
+    document.getElementById("startDate").value = hoy;
+    document.getElementById("endDate").value = hoy;
   </script>
 </body>
 </html>
