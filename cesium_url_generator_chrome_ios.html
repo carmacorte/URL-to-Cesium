@@ -18,7 +18,7 @@
       color: #1e3a8a;
     }
 
-    input, textarea, button, select {
+    input, textarea, button {
       font-size: 16px;
       padding: 8px;
       width: 100%;
@@ -89,9 +89,9 @@
 
   <fieldset class="group-checks">
     <legend>Business Unit</legend>
-    <label><input type="radio" name="bu" value="CVEBU" onchange="setBUModels(this.value)"> CVEBU</label>
-    <label><input type="radio" name="bu" value="CRBU" onchange="setBUModels(this.value)"> CRBU</label>
-    <label><input type="radio" name="bu" value="TPK" onchange="setBUModels(this.value)"> TPK</label>
+    <label><input type="checkbox" onclick="toggleGroup('CVEBU')"> CVEBU</label>
+    <label><input type="checkbox" onclick="toggleGroup('CRBU')"> CRBU</label>
+    <label><input type="checkbox" onclick="toggleGroup('TPK')"> TPK</label>
   </fieldset>
 
   <label for="location">Location:</label>
@@ -132,10 +132,21 @@
       ]
     };
 
-    function setBUModels(selectedBU) {
+    function toggleGroup(groupName) {
       const input = document.getElementById("uutTypes");
-      const models = groups[selectedBU] || [];
-      input.value = models.join(",");
+      const current = input.value.split(",").map(e => e.trim()).filter(e => e);
+      const groupItems = groups[groupName] || [];
+
+      const hasGroup = groupItems.every(g => current.includes(g));
+      let updated;
+
+      if (hasGroup) {
+        updated = current.filter(item => !groupItems.includes(item));
+      } else {
+        updated = [...new Set(current.concat(groupItems))];
+      }
+
+      input.value = updated.join(",");
     }
 
     function generateURL() {
@@ -152,7 +163,7 @@
       const encodedUUT = encodeURIComponent(uut);
       const encodedLoc = encodeURIComponent(location);
 
-      const url = `https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?SI=${encodedUUT},${encodedLoc}&SD=${from}&ED=${to}&datetype=week&yieldtype=firstpass&yielddatetype=rectime&uuttype=${encodedUUT}&location=${encodedLoc}&timezone=US%2FMountain`;
+      const url = `https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?SI=${encodedUUT},${encodedLoc}&SD=${from}&ED=${to}&datetype=nodate&yieldtype=firstpass&yielddatetype=rectime&uuttype=${encodedUUT}&location=${encodedLoc}&timezone=US%2FMountain`;
 
       document.getElementById("resultURL").value = url;
     }
