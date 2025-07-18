@@ -2,154 +2,146 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Cesium Yield URL Generator</title>
   <style>
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen;
-      background: #f5f9ff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f8fbff;
       margin: 0;
-      padding: 20px;
+      padding: 1rem;
+      color: #1f2937;
     }
-
     .container {
-      max-width: 500px;
+      max-width: 480px;
       margin: auto;
-      background: #ffffff;
-      padding: 25px;
-      border-radius: 16px;
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-    }
-
-    h2 {
-      color: #1d3557;
-      margin-bottom: 20px;
-    }
-
-    input[type="text"],
-    input[type="date"],
-    textarea {
-      width: 100%;
-      padding: 10px;
-      margin-top: 6px;
-      margin-bottom: 12px;
-      border: 1px solid #ccddee;
+      background: #fff;
       border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 0 8px rgba(0,0,0,0.05);
+    }
+    h1 {
+      font-size: 1.5rem;
+      color: #1f2937;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    h1::before {
+      content: "📎";
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: 600;
+    }
+    input[type="text"],
+    input[type="date"] {
+      width: 100%;
+      padding: 0.5rem;
+      font-size: 1rem;
+      margin-top: 0.25rem;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
       box-sizing: border-box;
     }
-
-    textarea {
-      resize: vertical;
+    .checkbox-group {
+      background-color: #e9f0f9;
+      padding: 0.5rem;
+      border-radius: 8px;
+      margin-top: 0.5rem;
     }
-
+    .checkbox-group label {
+      font-weight: normal;
+      display: block;
+    }
     button {
-      background-color: #1e67b2;
+      margin-top: 1rem;
+      padding: 0.6rem 1.2rem;
+      font-size: 1rem;
       border: none;
-      color: white;
-      padding: 10px 14px;
-      margin: 5px 2px;
-      border-radius: 12px;
+      border-radius: 8px;
       cursor: pointer;
-      font-size: 14px;
-      transition: background 0.2s;
+      margin-right: 0.5rem;
     }
-
-    button:hover {
-      background-color: #114d8e;
+    .btn-primary {
+      background-color: #1d4ed8;
+      color: white;
     }
-
-    .group-box {
-      background: #f0f6ff;
-      padding: 10px;
-      border-radius: 10px;
-      margin-bottom: 16px;
-      border: 1px solid #d3e3f2;
+    .btn-secondary {
+      background-color: #3b82f6;
+      color: white;
     }
-
-    .btn-group {
-      text-align: center;
+    .btn-tertiary {
+      background-color: #2563eb;
+      color: white;
+    }
+    #resultado {
+      width: 100%;
+      margin-top: 1rem;
+      padding: 0.5rem;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.9rem;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>📎 Cesium Yield URL Generator</h2>
-
+    <h1>Cesium Yield URL Generator</h1>
     <label for="uutTypes">UUT Types (separados por coma):</label>
-    <input id="uutTypes" type="text" />
+    <input type="text" id="uutTypes" placeholder="800-XXXXX-01,800-YYYYY-01" />
 
-    <div class="group-box">
-      <strong>Business Unit</strong><br />
-      <label><input type="checkbox" id="cvebu" /> CVEBU</label><br />
-      <label><input type="checkbox" id="crbu" /> CRBU</label><br />
+    <label>Business Unit</label>
+    <div class="checkbox-group">
+      <label><input type="checkbox" id="cvebu" /> CVEBU</label>
+      <label><input type="checkbox" id="crbu" /> CRBU</label>
       <label><input type="checkbox" id="tpk" /> TPK</label>
     </div>
 
     <label for="location">Location:</label>
-    <input id="location" type="text" value="FJZ" />
+    <input type="text" id="location" value="FJZ" />
 
     <label for="fromDate">From Date:</label>
-    <input id="fromDate" type="date" />
+    <input type="date" id="fromDate" />
 
     <label for="toDate">To Date:</label>
-    <input id="toDate" type="date" />
+    <input type="date" id="toDate" />
 
-    <div class="btn-group">
-      <button onclick="generarURL()">🎯 Generar URL</button>
-      <button onclick="copiarResultado()">📋 Copiar</button>
-      <button onclick="abrirURL()">🌐 Abrir</button>
-    </div>
+    <button class="btn-primary" onclick="generarURL()">🎯 Generar URL</button>
+    <button class="btn-secondary" onclick="copiarURL()">📋 Copiar</button>
+    <button class="btn-tertiary" onclick="abrirURL()">🌐 Abrir</button>
 
     <label for="resultado">Resultado:</label>
     <textarea id="resultado" rows="3" readonly></textarea>
   </div>
 
   <script>
-    const grupos = {
-      CVEBU: [
-        "800-108480-%", "800-109399-%", "800-110045-%", "800-110945-%",
-        "800-112271-%", "800-137504-%", "800-147504-%"
-      ],
-      CRBU: [
-        "80-LC0-36FH", "88-LC0-38FH-M", "8804-FC1", "8808-FC1"
-      ],
-      TPK: [
-        "800-108035-04", "800-108035-05", "800-108036-04",
-        "800-108037-04", "800-108038-04", "800-110656-01"
-      ]
+    const presets = {
+      cvebu: "800-108480-%,800-109399-%,800-110045-%,800-110945-%,800-112271-%,800-137504-%,800-147504-%",
+      crbu: "80-LC0-36FH,88-LC0-38FH-M,8804-FC1,8808-FC1",
+      tpk: "800-108035-04,800-108035-05,800-108036-04,800-108037-04,800-108038-04"
     };
 
     function generarURL() {
-      const manual = document.getElementById("uutTypes").value.split(",");
-      const finalList = new Set(manual.map(m => m.trim()).filter(Boolean));
+      let uut = document.getElementById("uutTypes").value.trim();
+      if (document.getElementById("cvebu").checked) uut += (uut ? "," : "") + presets.cvebu;
+      if (document.getElementById("crbu").checked) uut += (uut ? "," : "") + presets.crbu;
+      if (document.getElementById("tpk").checked) uut += (uut ? "," : "") + presets.tpk;
 
-      if (document.getElementById("cvebu").checked) grupos.CVEBU.forEach(x => finalList.add(x));
-      if (document.getElementById("crbu").checked) grupos.CRBU.forEach(x => finalList.add(x));
-      if (document.getElementById("tpk").checked) grupos.TPK.forEach(x => finalList.add(x));
-
-      const location = document.getElementById("location").value || "FJZ";
+      const loc = document.getElementById("location").value.trim();
       const from = document.getElementById("fromDate").value;
       const to = document.getElementById("toDate").value;
 
-      const params = new URLSearchParams({
-        SI: [...finalList].join(","),
-        SD: from,
-        ED: to,
-        location: location,
-        datetype: "nodate",
-        yieldtype: "firstpass",
-        yielddatetype: "rectime",
-        timezone: "US%2FMountain"
-      });
-
-      const url = `https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?${params.toString()}`;
+      const url = `https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?SI=${encodeURIComponent(uut)}&Location=${encodeURIComponent(loc)}&FromDate=${from}&ToDate=${to}`;
       document.getElementById("resultado").value = url;
     }
 
-    function copiarResultado() {
-      const output = document.getElementById("resultado");
-      output.select();
-      document.execCommand("copy");
+    function copiarURL() {
+      const result = document.getElementById("resultado");
+      result.select();
+      result.setSelectionRange(0, 99999);
+      navigator.clipboard.writeText(result.value);
     }
 
     function abrirURL() {
