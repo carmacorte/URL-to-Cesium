@@ -2,152 +2,122 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cesium Yield URL Generator</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen;
-      background: #f9fbff;
-      margin: 0;
-      padding: 1rem;
+      background-color: #f8f9fa;
+      padding: 2rem;
     }
-
     .container {
-      max-width: 480px;
+      max-width: 600px;
       margin: auto;
       background: white;
-      padding: 1.5rem;
-      border-radius: 1rem;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-
-    h2 {
-      margin-top: 0;
-      font-size: 1.4rem;
-      color: #1a2a61;
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
     }
-
-    label {
-      font-weight: 600;
-      display: block;
-      margin-top: 1rem;
-      margin-bottom: 0.25rem;
-    }
-
-    input, select, textarea {
-      width: 100%;
-      padding: 0.6rem;
-      font-size: 1rem;
-      border-radius: 0.5rem;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
-    }
-
-    .bu-checkboxes {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-      background: #f0f5ff;
-      padding: 0.5rem;
-      border-radius: 0.5rem;
-    }
-
-    .button-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-top: 1rem;
-    }
-
-    button {
-      flex: 1;
-      padding: 0.7rem;
-      font-size: 0.95rem;
-      font-weight: bold;
-      color: white;
-      background-color: #0055ff;
+    .btn-primary {
+      background-color: #0057b8;
       border: none;
-      border-radius: 0.5rem;
-      cursor: pointer;
     }
-
-    button:active {
-      transform: scale(0.98);
+    .btn-primary:hover {
+      background-color: #003f8c;
     }
-
-    .abrir {
-      background-color: #0078d7;
-    }
-
-    #resultado {
-      margin-top: 1rem;
-      font-size: 0.9rem;
-      word-break: break-all;
+    .result-box {
+      background-color: #f1f3f5;
+      border: 1px solid #ced4da;
+      padding: 0.5rem;
+      border-radius: 5px;
+      word-wrap: break-word;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>📎 Cesium Yield URL Generator</h2>
+    <h1>📎 <strong>Cesium Yield URL Generator</strong></h1>
 
-    <label for="uutTypes">UUT Types (separados por coma):</label>
-    <input type="text" id="uutTypes" placeholder="800-XXXXX-01,800-YYYYY-01"/>
-
-    <label>Business Unit</label>
-    <div class="bu-checkboxes">
-      <label><input type="checkbox" name="bu" value="CVEBU"/> CVEBU</label>
-      <label><input type="checkbox" name="bu" value="CRBU"/> CRBU</label>
-      <label><input type="checkbox" name="bu" value="TPK"/> TPK</label>
+    <div class="mb-3">
+      <label for="uutTypes" class="form-label">UUT Types (separados por coma):</label>
+      <input type="text" class="form-control" id="uutTypes" placeholder="800-XXXXX-01,800-YYYYY-01" />
     </div>
 
-    <label for="location">Location:</label>
-    <input type="text" id="location" value="FJZ"/>
-
-    <label for="fromDate">From Date:</label>
-    <input type="date" id="fromDate"/>
-
-    <label for="toDate">To Date:</label>
-    <input type="date" id="toDate"/>
-
-    <div class="button-group">
-      <button onclick="generarURL()">🎯 Generar URL</button>
-      <button onclick="copiarURL()">📋 Copiar</button>
-      <button class="abrir" onclick="abrirURL()">🌐 Abrir</button>
+    <div class="mb-3">
+      <label class="form-label">Business Unit</label>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="CVEBU" id="cvebu" />
+        <label class="form-check-label" for="cvebu">CVEBU</label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="CRBU" id="crbu" />
+        <label class="form-check-label" for="crbu">CRBU</label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="TPK" id="tpk" />
+        <label class="form-check-label" for="tpk">TPK</label>
+      </div>
     </div>
 
-    <div id="resultado"></div>
+    <div class="mb-3">
+      <label for="location" class="form-label">Location:</label>
+      <input type="text" class="form-control" id="location" value="FJZ" />
+    </div>
+
+    <div class="mb-3">
+      <label for="fromDate" class="form-label">From Date:</label>
+      <input type="date" class="form-control" id="fromDate" />
+    </div>
+
+    <div class="mb-3">
+      <label for="toDate" class="form-label">To Date:</label>
+      <input type="date" class="form-control" id="toDate" />
+    </div>
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-between mb-3">
+      <button class="btn btn-primary" onclick="generateURL()">🎯 Generar URL</button>
+      <button class="btn btn-secondary" onclick="copyURL()">📋 Copiar</button>
+      <button class="btn btn-outline-primary" onclick="openURL()">🌐 Abrir</button>
+    </div>
+
+    <label for="resultado" class="form-label">Resultado:</label>
+    <div id="resultado" class="result-box"></div>
   </div>
 
   <script>
-    function generarURL() {
-      const uutTypes = document.getElementById('uutTypes').value.trim();
-      const buChecked = document.querySelector('input[name="bu"]:checked');
-      const location = document.getElementById('location').value.trim();
-      const fromDate = document.getElementById('fromDate').value;
-      const toDate = document.getElementById('toDate').value;
+    function generateURL() {
+      const uutTypes = document.getElementById("uutTypes").value.trim();
+      const location = document.getElementById("location").value.trim();
+      const fromDate = document.getElementById("fromDate").value;
+      const toDate = document.getElementById("toDate").value;
 
-      if (!uutTypes || !buChecked || !location || !fromDate || !toDate) {
+      if (!uutTypes || !location || !fromDate || !toDate) {
         alert("Por favor completa todos los campos.");
         return;
       }
 
-      const url = `https://cesium.cisco.com/ccc/yield.html?uuttype=${encodeURIComponent(uutTypes)}&location=${location}&fromdate=${fromDate}&todate=${toDate}`;
-      document.getElementById('resultado').innerText = url;
+      const encodedLocation = encodeURIComponent(location);
+      const encodedUUT = encodeURIComponent(uutTypes);
+
+      const url = `https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?SI=${uutTypes},${location}&SD=${fromDate}&ED=${toDate}&datetype=week&yieldtype=firstpass&yielddatetype=rectime&uuttype=${uutTypes}&location=${location}&timezone=US%2FMountain`;
+
+      document.getElementById("resultado").innerText = url;
     }
 
-    function copiarURL() {
-      const text = document.getElementById('resultado').innerText;
-      if (text) {
-        navigator.clipboard.writeText(text);
-        alert("URL copiada al portapapeles.");
-      }
+    function copyURL() {
+      const resultado = document.getElementById("resultado").innerText;
+      if (!resultado) return;
+      navigator.clipboard.writeText(resultado).then(() => alert("URL copiada al portapapeles."));
     }
 
-    function abrirURL() {
-      const url = document.getElementById('resultado').innerText;
-      if (url) {
-        window.open(url, '_blank');
-      }
+    function openURL() {
+      const resultado = document.getElementById("resultado").innerText;
+      if (!resultado) return;
+      window.open(resultado, "_blank");
     }
   </script>
 </body>
