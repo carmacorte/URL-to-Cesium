@@ -2,178 +2,193 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cesium Yield URL Generator</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
   <style>
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background: #f4f7fc;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-    }
-    .container {
-      max-width: 420px;
-      width: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f4f8fd;
+      color: #333;
       padding: 20px;
     }
+
     h1 {
-      font-size: 20px;
-      color: #1b2e59;
-      margin-bottom: 15px;
+      font-size: 1.6rem;
+      color: #1a2c6b;
+      display: flex;
+      align-items: center;
     }
-    input[type="text"], input[type="date"] {
-      width: 100%;
-      padding: 10px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      margin: 6px 0 12px;
-      font-size: 14px;
+
+    h1::before {
+      content: '📎';
+      margin-right: 8px;
     }
+
     label {
       font-weight: bold;
+      margin-top: 12px;
       display: block;
-      margin-top: 10px;
-      margin-bottom: 5px;
     }
-    .checkboxes {
-      background: #e9f0fc;
-      border-radius: 10px;
+
+    input[type="text"], select, .choices__inner {
+      width: 100%;
+      padding: 10px;
+      margin-top: 4px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 0.95rem;
+    }
+
+    .bu-box {
+      background-color: #eaf1ff;
+      border-radius: 8px;
       padding: 10px;
       margin-bottom: 12px;
     }
-    .checkboxes label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-weight: normal;
-    }
-    button {
-      background-color: #1b66ff;
+
+    .button {
+      background-color: #0d6efd;
       color: white;
+      padding: 10px 14px;
+      margin: 5px 5px 12px 0;
       border: none;
-      padding: 10px 16px;
-      border-radius: 12px;
-      font-size: 14px;
+      border-radius: 10px;
       cursor: pointer;
-      margin: 4px 6px 4px 0;
+      font-weight: bold;
     }
-    .button-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 10px;
+
+    .button:hover {
+      background-color: #0b5ed7;
     }
+
+    .button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
     .result-box {
       width: 100%;
-      min-height: 50px;
       padding: 10px;
-      margin-top: 10px;
+      border-radius: 8px;
       border: 1px solid #ccc;
-      border-radius: 10px;
-      background: white;
-      font-size: 12px;
+      font-size: 0.9rem;
+      min-height: 50px;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>📎 Cesium Yield URL Generator</h1>
+  <h1>Cesium Yield URL Generator</h1>
 
-    <label>UUT Types (separados por coma):</label>
-    <input type="text" id="uutTypes" placeholder="800-XXXXX-01,800-YYYYY-01" />
+  <label for="uutTypes">UUT Types (separados por coma):</label>
+  <select id="uutTypes" multiple></select>
 
-    <label>Business Unit</label>
-    <div class="checkboxes">
-      <label><input type="checkbox" value="CVEBU" /> CVEBU</label>
-      <label><input type="checkbox" value="CRBU" /> CRBU</label>
-      <label><input type="checkbox" value="TPK" /> TPK</label>
-    </div>
-
-    <label>Location:</label>
-    <input type="text" id="location" placeholder="FJZ" />
-
-    <label>From Date:</label>
-    <input type="date" id="fromDate" />
-
-    <label>To Date:</label>
-    <input type="date" id="toDate" />
-
-    <div class="button-group">
-      <button onclick="setToday()">📅 Hoy</button>
-      <button onclick="setWeek()">📆 Semana</button>
-      <button onclick="setLast7Days()">🔁 7 días</button>
-      <button onclick="setThisMonth()">🗓️ Mes</button>
-    </div>
-
-    <div class="button-group">
-      <button onclick="generateURL()">🎯 Generar URL</button>
-      <button onclick="copyToClipboard()">📋 Copiar</button>
-      <button onclick="openURL()">🌐 Abrir</button>
-    </div>
-
-    <label>Resultado:</label>
-    <div id="result" class="result-box"></div>
+  <label>Business Unit</label>
+  <div class="bu-box">
+    <label><input type="checkbox" class="bu" value="CVEBU"> CVEBU</label><br>
+    <label><input type="checkbox" class="bu" value="CRBU"> CRBU</label><br>
+    <label><input type="checkbox" class="bu" value="TPK"> TPK</label>
   </div>
 
+  <label for="location">Location:</label>
+  <input type="text" id="location" value="FJZ" />
+
+  <label for="fromDate">From Date:</label>
+  <input type="date" id="fromDate" />
+
+  <label for="toDate">To Date:</label>
+  <input type="date" id="toDate" />
+
+  <div>
+    <button class="button" onclick="setToday()">📅 Hoy</button>
+    <button class="button" onclick="setWeek()">📅 Semana</button>
+    <button class="button" onclick="setLast7Days()">🔁 7 días</button>
+    <button class="button" onclick="setMonth()">🗓️ Mes</button>
+  </div>
+
+  <div>
+    <button class="button" onclick="generarURL()">🎯 Generar URL</button>
+    <button class="button" onclick="copiar()">📋 Copiar</button>
+    <button class="button" onclick="abrir()">🌐 Abrir</button>
+  </div>
+
+  <label for="resultado">Resultado:</label>
+  <textarea id="resultado" class="result-box" readonly></textarea>
+
+  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
   <script>
-    function formatDate(date) {
-      return date.toISOString().split("T")[0];
+    const choices = new Choices('#uutTypes', {
+      removeItemButton: true,
+      placeholderValue: 'Selecciona modelos...',
+      searchPlaceholderValue: 'Buscar modelo...'
+    });
+
+    const modelos = [
+      "800-110045-01", "800-110945-01", "800-108035-04", "800-108035-05",
+      "800-108036-04", "800-108037-04", "800-108038-04", "800-109123-05"
+    ];
+    modelos.forEach(m => choices.setChoices([{ value: m, label: m }], 'value', 'label', false));
+
+    function getFecha(offset = 0) {
+      const d = new Date();
+      d.setDate(d.getDate() + offset);
+      return d.toISOString().split('T')[0];
     }
 
     function setToday() {
-      const today = new Date();
-      const formatted = formatDate(today);
-      document.getElementById("fromDate").value = formatted;
-      document.getElementById("toDate").value = formatted;
+      const today = getFecha();
+      document.getElementById('fromDate').value = today;
+      document.getElementById('toDate').value = today;
     }
 
     function setWeek() {
       const today = new Date();
-      const sunday = new Date(today);
-      sunday.setDate(today.getDate() - today.getDay());
-      document.getElementById("fromDate").value = formatDate(sunday);
-      document.getElementById("toDate").value = formatDate(today);
+      const dayOfWeek = today.getDay(); // 0 = domingo
+      const lastSunday = new Date(today);
+      lastSunday.setDate(today.getDate() - dayOfWeek);
+      document.getElementById('fromDate').value = lastSunday.toISOString().split('T')[0];
+      document.getElementById('toDate').value = getFecha();
     }
 
     function setLast7Days() {
+      document.getElementById('fromDate').value = getFecha(-6);
+      document.getElementById('toDate').value = getFecha();
+    }
+
+    function setMonth() {
       const today = new Date();
-      const past = new Date(today);
-      past.setDate(today.getDate() - 6);
-      document.getElementById("fromDate").value = formatDate(past);
-      document.getElementById("toDate").value = formatDate(today);
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      document.getElementById('fromDate').value = firstDay.toISOString().split('T')[0];
+      document.getElementById('toDate').value = getFecha();
     }
 
-    function setThisMonth() {
-      const today = new Date();
-      const start = new Date(today.getFullYear(), today.getMonth(), 1);
-      document.getElementById("fromDate").value = formatDate(start);
-      document.getElementById("toDate").value = formatDate(today);
+    function generarURL() {
+      const uuts = choices.getValue(true).join(',');
+      const bus = Array.from(document.querySelectorAll('.bu:checked')).map(e => e.value).join(',');
+      const loc = document.getElementById('location').value.trim();
+      const from = document.getElementById('fromDate').value;
+      const to = document.getElementById('toDate').value;
+
+      if (!uuts || !loc || !from || !to) {
+        alert("Todos los campos son obligatorios.");
+        return;
+      }
+
+      const url = `https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?SI=${encodeURIComponent(uuts)}&BU=${encodeURIComponent(bus)}&LO=${loc}&FD=${from}&TD=${to}`;
+      document.getElementById('resultado').value = url;
     }
 
-    function generateURL() {
-      const uutTypes = document.getElementById("uutTypes").value.split(",").map(x => x.trim()).join("%2C");
-      const businessUnits = Array.from(document.querySelectorAll(".checkboxes input:checked")).map(el => el.value).join("%2C");
-      const location = document.getElementById("location").value.trim();
-      const fromDate = document.getElementById("fromDate").value;
-      const toDate = document.getElementById("toDate").value;
-
-      const base = "https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?";
-      const params = `SI=${uutTypes}&BU=${businessUnits}&LO=${location}&FD=${fromDate}&TD=${toDate}`;
-      const url = base + params;
-
-      document.getElementById("result").textContent = url;
+    function copiar() {
+      const url = document.getElementById('resultado');
+      url.select();
+      document.execCommand("copy");
     }
 
-    function copyToClipboard() {
-      const url = document.getElementById("result").textContent;
-      navigator.clipboard.writeText(url).then(() => alert("URL copiada"));
-    }
-
-    function openURL() {
-      const url = document.getElementById("result").textContent;
-      if (url) window.open(url, "_blank");
+    function abrir() {
+      const url = document.getElementById('resultado').value;
+      if (url) window.open(url, '_blank');
     }
   </script>
 </body>
