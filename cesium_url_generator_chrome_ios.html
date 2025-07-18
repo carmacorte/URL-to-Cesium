@@ -2,34 +2,98 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Generador de URL para Cesium (FJZ)</title>
+  <title>Cesium Lookup Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 1em;
+      background-color: #f5f8fb;
+      color: #222;
     }
-    input, button, textarea {
-      margin: 10px 0;
-      padding: 5px;
+
+    h2 {
+      font-size: 1.3em;
+      margin-bottom: 0.5em;
+      color: #2a4365;
+    }
+
+    label {
+      font-size: 0.9em;
+      margin-top: 1em;
+      display: block;
+      color: #2a4365;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    textarea {
+      font-size: 0.9em;
       width: 100%;
+      padding: 0.6em;
+      border: 1px solid #cbd5e0;
+      border-radius: 6px;
+      box-sizing: border-box;
+      margin-top: 0.3em;
     }
+
+    textarea {
+      resize: vertical;
+    }
+
     button {
-      width: auto;
-      margin-right: 10px;
+      font-size: 0.9em;
+      padding: 0.6em 1em;
+      margin: 0.3em 0.2em 0.3em 0;
+      border: none;
+      border-radius: 6px;
+      background-color: #2b6cb0;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    button:hover {
+      background-color: #2c5282;
+    }
+
+    .grupo-botones {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5em;
+      margin-top: 1em;
+    }
+
+    .grupo-botones button {
+      flex: 1 1 auto;
+    }
+
+    .grupos-modelos {
+      margin-top: 1em;
+    }
+
+    .grupo {
+      font-size: 0.85em;
+      margin-bottom: 0.3em;
+    }
+
+    .grupo input[type="checkbox"] {
+      margin-right: 0.3em;
     }
   </style>
 </head>
 <body>
 
-<h2>Cesium Lookup Generator</h2>
+<h2>🔗 Cesium Yield URL Generator</h2>
 
-<label for="uutTypes">UUT Types (coma):</label>
+<label for="uutTypes">UUT Types (separados por coma):</label>
 <input type="text" id="uutTypes" placeholder="800-110045-01,800-110945-01" />
 
-<h3>Agregar por grupo:</h3>
-<button onclick="agregarCVEBU()">➕ Agregar CVEBU</button>
-<button onclick="agregarCRBU()">➕ Agregar CRBU</button>
-<button onclick="limpiarUUT()">🧹 Limpiar</button>
+<div class="grupos-modelos">
+  <div class="grupo"><input type="checkbox" id="cvbu" onchange="agregarGrupo(this)"> CVEBU</div>
+  <div class="grupo"><input type="checkbox" id="crbu" onchange="agregarGrupo(this)"> CRBU</div>
+</div>
 
 <label for="location">Location:</label>
 <input type="text" id="location" value="FJZ" />
@@ -40,53 +104,50 @@
 <label for="toDate">To Date:</label>
 <input type="date" id="toDate" />
 
-<button onclick="generateURL()">🎯 Generar URL</button>
+<div class="grupo-botones">
+  <button onclick="generateURL()">🎯 Generar URL</button>
+  <button onclick="copyURL()">📋 Copiar</button>
+  <button onclick="openURL()">🌐 Abrir</button>
+</div>
 
-<h3>Resultado:</h3>
+<label for="resultURL">Resultado:</label>
 <textarea id="resultURL" rows="3" readonly></textarea>
-<br>
-<button onclick="copyURL()">📋 Copiar URL</button>
-<button onclick="openURL()">🌐 Abrir en navegador</button>
-<br><br>
-<button onclick="startAlerts()">⏰ Activar alerta cada 5 min</button>
-<button onclick="stopAlerts()">⛔ Detener alerta</button>
+
+<div class="grupo-botones">
+  <button onclick="startAlerts()">⏰ Activar alerta cada 5 min</button>
+  <button onclick="stopAlerts()">⛔ Detener alerta</button>
+</div>
 
 <script>
 let latestURL = "";
 let alertIntervalId = null;
 
-const grupos = {
-  CVEBU: [
-    "800-108480-%", "800-109399-%", "800-110045-%",
-    "800-110945-%", "800-112271-%", "800-137504-%", "800-147504-%"
-  ],
-  CRBU: [
-    "80-LC0-36FH", "88-LC0-38FH-M", "8804-FC1", "8808-FC1"
-  ]
-};
+function agregarGrupo(checkbox) {
+  const cvebu = "800-108480-%,800-109399-%,800-110045-%,800-110945-%,800-112271-%,800-137504-%,800-147504-%";
+  const crbu = "80-LC0-36FH,88-LC0-38FH-M,8804-FC1,8808-FC1";
 
-function agregarCVEBU() {
-  agregarGrupo(grupos.CVEBU);
-}
+  const campo = document.getElementById("uutTypes");
+  let modelos = campo.value.split(",").map(s => s.trim()).filter(Boolean);
 
-function agregarCRBU() {
-  agregarGrupo(grupos.CRBU);
-}
+  const yaTiene = (grupo) => modelos.some(m => grupo.includes(m));
 
-function agregarGrupo(arr) {
-  const input = document.getElementById("uutTypes");
-  let existentes = input.value.split(",").map(x => x.trim()).filter(x => x !== "");
-  let nuevos = [...existentes];
+  if (checkbox.id === "cvbu") {
+    if (checkbox.checked && !yaTiene(cvebu)) {
+      modelos.push(...cvebu.split(","));
+    } else if (!checkbox.checked) {
+      modelos = modelos.filter(m => !cvebu.split(",").includes(m));
+    }
+  }
 
-  arr.forEach(item => {
-    if (!existentes.includes(item)) nuevos.push(item);
-  });
+  if (checkbox.id === "crbu") {
+    if (checkbox.checked && !yaTiene(crbu)) {
+      modelos.push(...crbu.split(","));
+    } else if (!checkbox.checked) {
+      modelos = modelos.filter(m => !crbu.split(",").includes(m));
+    }
+  }
 
-  input.value = nuevos.join(",");
-}
-
-function limpiarUUT() {
-  document.getElementById("uutTypes").value = "";
+  campo.value = modelos.join(",");
 }
 
 function generateURL() {
@@ -96,7 +157,7 @@ function generateURL() {
   const to = document.getElementById("toDate").value;
 
   if (!uut || !from || !to) {
-    alert("⚠️ Por favor llena todos los campos.");
+    alert("⚠️ Completa todos los campos.");
     return;
   }
 
@@ -104,7 +165,6 @@ function generateURL() {
   const encodedLoc = encodeURIComponent(location);
 
   latestURL = `https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?SI=${encodedUUT},${encodedLoc}&SD=${from}&ED=${to}&datetype=nodate&yieldtype=firstpass&yielddatetype=rectime&uuttype=${encodedUUT}&location=${encodedLoc}&timezone=US%2FMountain`;
-
   document.getElementById("resultURL").value = latestURL;
 }
 
@@ -112,20 +172,20 @@ function copyURL() {
   const urlBox = document.getElementById("resultURL");
   urlBox.select();
   document.execCommand("copy");
-  alert("📋 URL copiada al portapapeles.");
+  alert("📋 URL copiada.");
 }
 
 function openURL() {
   if (latestURL) {
     window.open(latestURL, "_blank");
   } else {
-    alert("⚠️ Genera una URL primero.");
+    alert("⚠️ Primero genera un URL.");
   }
 }
 
 function startAlerts() {
   if (alertIntervalId) {
-    alert("🟦 Ya está activa la alerta.");
+    alert("🔵 Ya está activa la alerta.");
     return;
   }
 
@@ -133,7 +193,7 @@ function startAlerts() {
   alertIntervalId = setInterval(() => {
     if (latestURL) {
       const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      alert(`🕒 Revisión de Yield (${now}):\n🔗 ${latestURL}`);
+      alert(`🕒 Revisión (${now}):\n${latestURL}`);
     } else {
       alert("⚠️ No se ha generado un URL todavía.");
     }
