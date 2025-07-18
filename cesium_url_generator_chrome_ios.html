@@ -73,8 +73,16 @@
       gap: 10px;
     }
 
+    .secondary-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: -10px;
+      margin-bottom: 10px;
+    }
+
     @media (max-width: 480px) {
-      .date-row {
+      .date-row, .button-row, .secondary-buttons {
         flex-direction: column;
       }
     }
@@ -106,6 +114,10 @@
       <label for="toDate">To Date:</label>
       <input type="date" id="toDate"/>
     </div>
+  </div>
+
+  <div class="secondary-buttons">
+    <button onclick="setThisWeek()">📅 Semana</button>
   </div>
 
   <div class="button-row">
@@ -147,6 +159,15 @@
       }
 
       input.value = updated.join(",");
+    }
+
+    function setThisWeek() {
+      const today = new Date();
+      const lastSunday = new Date(today);
+      lastSunday.setDate(today.getDate() - today.getDay());
+
+      document.getElementById("fromDate").value = lastSunday.toISOString().split("T")[0];
+      document.getElementById("toDate").value = today.toISOString().split("T")[0];
     }
 
     function generateURL() {
