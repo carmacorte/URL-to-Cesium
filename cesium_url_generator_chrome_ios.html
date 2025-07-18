@@ -2,197 +2,43 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cesium Yield URL Generator</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #f8fbfe;
-      padding: 20px;
-      color: #1f2937;
-    }
-
-    h2 {
-      font-size: 1.4em;
-      margin-bottom: 10px;
-      color: #1e3a8a;
-    }
-
-    input, textarea, button, select {
-      font-size: 16px;
-      padding: 8px;
-      width: 100%;
-      margin-top: 5px;
-      margin-bottom: 15px;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      box-sizing: border-box;
-    }
-
-    textarea {
-      resize: vertical;
-    }
-
-    button {
-      background-color: #2563eb;
-      color: white;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-    }
-
-    button:hover {
-      background-color: #1d4ed8;
-    }
-
-    .button-row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .group-checks {
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 10px;
-      margin-bottom: 15px;
-    }
-
-    .group-checks legend {
-      font-weight: bold;
-      color: #374151;
-    }
-
-    .group-checks label {
-      display: block;
-      margin-bottom: 5px;
-    }
-
-    .date-row {
-      display: flex;
-      gap: 10px;
-    }
-
-    @media (max-width: 480px) {
-      .date-row {
-        flex-direction: column;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div class="container">
+    <h2>📎 Cesium Yield URL Generator</h2>
 
-  <h2>📎 Cesium Yield URL Generator</h2>
+    <label for="uutTypes">UUT Types (separados por coma):</label>
+    <input id="uutTypes" type="text" />
 
-  <label for="uutTypes">UUT Types (separados por coma):</label>
-  <input type="text" id="uutTypes" placeholder="800-110045-01,800-110945-01"/>
-
-  <fieldset class="group-checks">
-    <legend>Business Unit</legend>
-    <label><input type="checkbox" onclick="toggleGroup('CVEBU')"> CVEBU</label>
-    <label><input type="checkbox" onclick="toggleGroup('CRBU')"> CRBU</label>
-    <label><input type="checkbox" onclick="toggleGroup('TPK')"> TPK</label>
-  </fieldset>
-
-  <label for="location">Location:</label>
-  <input type="text" id="location" value="FJZ"/>
-
-  <div class="date-row">
-    <div style="flex:1;">
-      <label for="fromDate">From Date:</label>
-      <input type="date" id="fromDate"/>
+    <div class="group-box">
+      <strong>Business Unit</strong><br />
+      <label><input type="checkbox" id="cvebu" /> CVEBU</label><br />
+      <label><input type="checkbox" id="crbu" /> CRBU</label><br />
+      <label><input type="checkbox" id="tpk" /> TPK</label>
     </div>
-    <div style="flex:1;">
-      <label for="toDate">To Date:</label>
-      <input type="date" id="toDate"/>
+
+    <label for="location">Location:</label>
+    <input id="location" type="text" value="FJZ" />
+
+    <label for="fromDate">From Date:</label>
+    <input id="fromDate" type="date" />
+
+    <label for="toDate">To Date:</label>
+    <input id="toDate" type="date" />
+
+    <div class="btn-group">
+      <button onclick="generarURL()">🎯 Generar URL</button>
+      <button onclick="copiarResultado()">📋 Copiar</button>
+      <button onclick="abrirURL()">🌐 Abrir</button>
     </div>
+
+    <label for="resultado">Resultado:</label>
+    <textarea id="resultado" rows="3" readonly></textarea>
   </div>
 
-  <div class="button-row">
-    <button onclick="generateURL()">🎯 Generar URL</button>
-    <button onclick="copyURL()">📋 Copiar</button>
-    <button onclick="openURL()">🌐 Abrir</button>
-  </div>
-
-  <label for="resultURL">Resultado:</label>
-  <textarea id="resultURL" rows="3" readonly></textarea>
-
-  <script>
-    const groups = {
-      CVEBU: [
-        "800-108480-%", "800-109399-%", "800-110045-%", "800-110945-%",
-        "800-112271-%", "800-137504-%", "800-147504-%"
-      ],
-      CRBU: [
-        "80-LC0-36FH", "88-LC0-38FH-M", "8804-FC1", "8808-FC1"
-      ],
-      TPK: [
-        "800-108035-04", "800-108035-05", "800-108036-04",
-        "800-108037-04", "800-108038-04", "800-110656-01"
-      ]
-    };
-
-    function toggleGroup(groupName) {
-      const input = document.getElementById("uutTypes");
-      const current = input.value.split(",").map(e => e.trim()).filter(e => e);
-      const groupItems = groups[groupName] || [];
-
-      const hasGroup = groupItems.every(g => current.includes(g));
-      let updated;
-
-      if (hasGroup) {
-        updated = current.filter(item => !groupItems.includes(item));
-      } else {
-        updated = [...new Set(current.concat(groupItems))];
-      }
-
-      input.value = updated.join(",");
-    }
-
-    function generateURL() {
-      const uut = document.getElementById("uutTypes").value.trim();
-      const location = document.getElementById("location").value.trim();
-      const from = document.getElementById("fromDate").value;
-      const to = document.getElementById("toDate").value;
-
-      if (!uut || !from || !to) {
-        alert("⚠️ Por favor completa todos los campos.");
-        return;
-      }
-
-      const encodedUUT = encodeURIComponent(uut);
-      const encodedLoc = encodeURIComponent(location);
-
-      const url = `https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?SI=${encodedUUT},${encodedLoc}&SD=${from}&ED=${to}&datetype=nodate&yieldtype=firstpass&yielddatetype=rectime&uuttype=${encodedUUT}&location=${encodedLoc}&timezone=US%2FMountain`;
-
-      document.getElementById("resultURL").value = url;
-    }
-
-    function copyURL() {
-      const urlBox = document.getElementById("resultURL");
-      urlBox.select();
-      document.execCommand("copy");
-      alert("📋 URL copiada al portapapeles.");
-    }
-
-    function openURL() {
-      const url = document.getElementById("resultURL").value;
-      if (url) {
-        window.open(url, "_blank");
-      } else {
-        alert("⚠️ Genera una URL primero.");
-      }
-    }
-
-    window.onload = () => {
-      const today = new Date();
-      const yesterday = new Date();
-      yesterday.setDate(today.getDate() - 1);
-
-      document.getElementById("fromDate").value = yesterday.toISOString().split("T")[0];
-      document.getElementById("toDate").value = today.toISOString().split("T")[0];
-    };
-  </script>
-
+  <script src="script.js"></script>
 </body>
 </html>
