@@ -6,146 +6,173 @@
   <title>Cesium Yield URL Generator</title>
   <style>
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #f8fbff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #f4f7fc;
       margin: 0;
-      padding: 1rem;
-      color: #1f2937;
+      padding: 0;
+      display: flex;
+      justify-content: center;
     }
     .container {
-      max-width: 480px;
-      margin: auto;
-      background: #fff;
-      border-radius: 12px;
-      padding: 1rem;
-      box-shadow: 0 0 8px rgba(0,0,0,0.05);
+      max-width: 420px;
+      width: 100%;
+      padding: 20px;
     }
     h1 {
-      font-size: 1.5rem;
-      color: #1f2937;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+      font-size: 20px;
+      color: #1b2e59;
+      margin-bottom: 15px;
     }
-    h1::before {
-      content: "📎";
+    input[type="text"], input[type="date"] {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      margin: 6px 0 12px;
+      font-size: 14px;
     }
     label {
+      font-weight: bold;
       display: block;
-      margin-top: 1rem;
-      font-weight: 600;
+      margin-top: 10px;
+      margin-bottom: 5px;
     }
-    input[type="text"],
-    input[type="date"] {
-      width: 100%;
-      padding: 0.5rem;
-      font-size: 1rem;
-      margin-top: 0.25rem;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      box-sizing: border-box;
+    .checkboxes {
+      background: #e9f0fc;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 12px;
     }
-    .checkbox-group {
-      background-color: #e9f0f9;
-      padding: 0.5rem;
-      border-radius: 8px;
-      margin-top: 0.5rem;
-    }
-    .checkbox-group label {
+    .checkboxes label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
       font-weight: normal;
-      display: block;
     }
     button {
-      margin-top: 1rem;
-      padding: 0.6rem 1.2rem;
-      font-size: 1rem;
+      background-color: #1b66ff;
+      color: white;
       border: none;
-      border-radius: 8px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-size: 14px;
       cursor: pointer;
-      margin-right: 0.5rem;
+      margin: 4px 6px 4px 0;
     }
-    .btn-primary {
-      background-color: #1d4ed8;
-      color: white;
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
     }
-    .btn-secondary {
-      background-color: #3b82f6;
-      color: white;
-    }
-    .btn-tertiary {
-      background-color: #2563eb;
-      color: white;
-    }
-    #resultado {
+    .result-box {
       width: 100%;
-      margin-top: 1rem;
-      padding: 0.5rem;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      font-size: 0.9rem;
+      min-height: 50px;
+      padding: 10px;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      background: white;
+      font-size: 12px;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Cesium Yield URL Generator</h1>
-    <label for="uutTypes">UUT Types (separados por coma):</label>
+    <h1>📎 Cesium Yield URL Generator</h1>
+
+    <label>UUT Types (separados por coma):</label>
     <input type="text" id="uutTypes" placeholder="800-XXXXX-01,800-YYYYY-01" />
 
     <label>Business Unit</label>
-    <div class="checkbox-group">
-      <label><input type="checkbox" id="cvebu" /> CVEBU</label>
-      <label><input type="checkbox" id="crbu" /> CRBU</label>
-      <label><input type="checkbox" id="tpk" /> TPK</label>
+    <div class="checkboxes">
+      <label><input type="checkbox" value="CVEBU" /> CVEBU</label>
+      <label><input type="checkbox" value="CRBU" /> CRBU</label>
+      <label><input type="checkbox" value="TPK" /> TPK</label>
     </div>
 
-    <label for="location">Location:</label>
-    <input type="text" id="location" value="FJZ" />
+    <label>Location:</label>
+    <input type="text" id="location" placeholder="FJZ" />
 
-    <label for="fromDate">From Date:</label>
+    <label>From Date:</label>
     <input type="date" id="fromDate" />
 
-    <label for="toDate">To Date:</label>
+    <label>To Date:</label>
     <input type="date" id="toDate" />
 
-    <button class="btn-primary" onclick="generarURL()">🎯 Generar URL</button>
-    <button class="btn-secondary" onclick="copiarURL()">📋 Copiar</button>
-    <button class="btn-tertiary" onclick="abrirURL()">🌐 Abrir</button>
+    <div class="button-group">
+      <button onclick="setToday()">📅 Hoy</button>
+      <button onclick="setWeek()">📆 Semana</button>
+      <button onclick="setLast7Days()">🔁 7 días</button>
+      <button onclick="setThisMonth()">🗓️ Mes</button>
+    </div>
 
-    <label for="resultado">Resultado:</label>
-    <textarea id="resultado" rows="3" readonly></textarea>
+    <div class="button-group">
+      <button onclick="generateURL()">🎯 Generar URL</button>
+      <button onclick="copyToClipboard()">📋 Copiar</button>
+      <button onclick="openURL()">🌐 Abrir</button>
+    </div>
+
+    <label>Resultado:</label>
+    <div id="result" class="result-box"></div>
   </div>
 
   <script>
-    const presets = {
-      cvebu: "800-108480-%,800-109399-%,800-110045-%,800-110945-%,800-112271-%,800-137504-%,800-147504-%",
-      crbu: "80-LC0-36FH,88-LC0-38FH-M,8804-FC1,8808-FC1",
-      tpk: "800-108035-04,800-108035-05,800-108036-04,800-108037-04,800-108038-04"
-    };
-
-    function generarURL() {
-      let uut = document.getElementById("uutTypes").value.trim();
-      if (document.getElementById("cvebu").checked) uut += (uut ? "," : "") + presets.cvebu;
-      if (document.getElementById("crbu").checked) uut += (uut ? "," : "") + presets.crbu;
-      if (document.getElementById("tpk").checked) uut += (uut ? "," : "") + presets.tpk;
-
-      const loc = document.getElementById("location").value.trim();
-      const from = document.getElementById("fromDate").value;
-      const to = document.getElementById("toDate").value;
-
-      const url = `https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?SI=${encodeURIComponent(uut)}&Location=${encodeURIComponent(loc)}&FromDate=${from}&ToDate=${to}`;
-      document.getElementById("resultado").value = url;
+    function formatDate(date) {
+      return date.toISOString().split("T")[0];
     }
 
-    function copiarURL() {
-      const result = document.getElementById("resultado");
-      result.select();
-      result.setSelectionRange(0, 99999);
-      navigator.clipboard.writeText(result.value);
+    function setToday() {
+      const today = new Date();
+      const formatted = formatDate(today);
+      document.getElementById("fromDate").value = formatted;
+      document.getElementById("toDate").value = formatted;
     }
 
-    function abrirURL() {
-      const url = document.getElementById("resultado").value;
+    function setWeek() {
+      const today = new Date();
+      const sunday = new Date(today);
+      sunday.setDate(today.getDate() - today.getDay());
+      document.getElementById("fromDate").value = formatDate(sunday);
+      document.getElementById("toDate").value = formatDate(today);
+    }
+
+    function setLast7Days() {
+      const today = new Date();
+      const past = new Date(today);
+      past.setDate(today.getDate() - 6);
+      document.getElementById("fromDate").value = formatDate(past);
+      document.getElementById("toDate").value = formatDate(today);
+    }
+
+    function setThisMonth() {
+      const today = new Date();
+      const start = new Date(today.getFullYear(), today.getMonth(), 1);
+      document.getElementById("fromDate").value = formatDate(start);
+      document.getElementById("toDate").value = formatDate(today);
+    }
+
+    function generateURL() {
+      const uutTypes = document.getElementById("uutTypes").value.split(",").map(x => x.trim()).join("%2C");
+      const businessUnits = Array.from(document.querySelectorAll(".checkboxes input:checked")).map(el => el.value).join("%2C");
+      const location = document.getElementById("location").value.trim();
+      const fromDate = document.getElementById("fromDate").value;
+      const toDate = document.getElementById("toDate").value;
+
+      const base = "https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?";
+      const params = `SI=${uutTypes}&BU=${businessUnits}&LO=${location}&FD=${fromDate}&TD=${toDate}`;
+      const url = base + params;
+
+      document.getElementById("result").textContent = url;
+    }
+
+    function copyToClipboard() {
+      const url = document.getElementById("result").textContent;
+      navigator.clipboard.writeText(url).then(() => alert("URL copiada"));
+    }
+
+    function openURL() {
+      const url = document.getElementById("result").textContent;
       if (url) window.open(url, "_blank");
     }
   </script>
