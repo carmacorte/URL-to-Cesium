@@ -2,175 +2,152 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Cesium Yield URL Generator</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" rel="stylesheet" />
   <style>
     body {
-      background-color: #f8fbff;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen;
+      background: #f9fbff;
+      margin: 0;
+      padding: 1rem;
     }
+
     .container {
-      max-width: 460px;
+      max-width: 480px;
       margin: auto;
-      background: #fff;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+      background: white;
+      padding: 1.5rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     }
-    h1 {
-      font-size: 1.5rem;
-      font-weight: bold;
+
+    h2 {
+      margin-top: 0;
+      font-size: 1.4rem;
+      color: #1a2a61;
     }
-    .form-label {
-      font-weight: 500;
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin-top: 1rem;
+      margin-bottom: 0.25rem;
     }
-    .tagify__input {
-      min-height: 38px;
-    }
-    button {
+
+    input, select, textarea {
       width: 100%;
+      padding: 0.6rem;
+      font-size: 1rem;
+      border-radius: 0.5rem;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
     }
-    .quick-btns .btn {
-      margin: 4px 2px;
+
+    .bu-checkboxes {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      background: #f0f5ff;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+    }
+
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    button {
       flex: 1;
+      padding: 0.7rem;
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: white;
+      background-color: #0055ff;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .abrir {
+      background-color: #0078d7;
+    }
+
+    #resultado {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      word-break: break-all;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>📎 Cesium Yield URL Generator</h1>
-    <div class="mb-3">
-      <label class="form-label">UUT Types (separados por coma):</label>
-      <input id="modelos" placeholder="Selecciona modelos..." class="form-control">
+    <h2>📎 Cesium Yield URL Generator</h2>
+
+    <label for="uutTypes">UUT Types (separados por coma):</label>
+    <input type="text" id="uutTypes" placeholder="800-XXXXX-01,800-YYYYY-01"/>
+
+    <label>Business Unit</label>
+    <div class="bu-checkboxes">
+      <label><input type="checkbox" name="bu" value="CVEBU"/> CVEBU</label>
+      <label><input type="checkbox" name="bu" value="CRBU"/> CRBU</label>
+      <label><input type="checkbox" name="bu" value="TPK"/> TPK</label>
     </div>
 
-    <div class="mb-3">
-      <label class="form-label">Business Unit</label>
-      <div class="form-check">
-        <input class="form-check-input bu" type="radio" name="bu" id="cvebu" value="CVEBU">
-        <label class="form-check-label" for="cvebu">CVEBU</label>
-      </div>
-      <div class="form-check">
-        <input class="form-check-input bu" type="radio" name="bu" id="crbu" value="CRBU">
-        <label class="form-check-label" for="crbu">CRBU</label>
-      </div>
-      <div class="form-check">
-        <input class="form-check-input bu" type="radio" name="bu" id="tpk" value="TPK">
-        <label class="form-check-label" for="tpk">TPK</label>
-      </div>
+    <label for="location">Location:</label>
+    <input type="text" id="location" value="FJZ"/>
+
+    <label for="fromDate">From Date:</label>
+    <input type="date" id="fromDate"/>
+
+    <label for="toDate">To Date:</label>
+    <input type="date" id="toDate"/>
+
+    <div class="button-group">
+      <button onclick="generarURL()">🎯 Generar URL</button>
+      <button onclick="copiarURL()">📋 Copiar</button>
+      <button class="abrir" onclick="abrirURL()">🌐 Abrir</button>
     </div>
 
-    <div class="mb-3">
-      <label class="form-label">Location:</label>
-      <input id="location" class="form-control" value="FJZ">
-    </div>
-
-    <div class="mb-3 row">
-      <div class="col">
-        <label class="form-label">From Date:</label>
-        <input type="date" id="fromDate" class="form-control">
-      </div>
-      <div class="col">
-        <label class="form-label">To Date:</label>
-        <input type="date" id="toDate" class="form-control">
-      </div>
-    </div>
-
-    <div class="quick-btns d-flex flex-wrap mb-3">
-      <button class="btn btn-outline-primary" onclick="setDate('hoy')">📅 Hoy</button>
-      <button class="btn btn-outline-primary" onclick="setDate('semana')">📅 Semana</button>
-      <button class="btn btn-outline-primary" onclick="setDate('7dias')">🔁 7 días</button>
-      <button class="btn btn-outline-primary" onclick="setDate('mes')">🗓️ Mes</button>
-    </div>
-
-    <button class="btn btn-primary mb-2" onclick="generarURL()">🎯 Generar URL</button>
-    <button class="btn btn-secondary mb-2" onclick="copiarURL()">📋 Copiar</button>
-    <button class="btn btn-info text-white mb-3" onclick="abrirURL()">🌐 Abrir</button>
-
-    <label class="form-label">Resultado:</label>
-    <textarea id="resultado" class="form-control" rows="3" readonly></textarea>
+    <div id="resultado"></div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
   <script>
-    const modelosPorBU = {
-      CVEBU: ["800-110045-01", "800-110945-01"],
-      CRBU: ["800-120045-01"],
-      TPK: ["800-130045-01", "800-130055-01"]
-    };
-
-    const modelosInput = document.querySelector("#modelos");
-    const tagify = new Tagify(modelosInput, {
-      whitelist: [],
-      dropdown: {
-        maxItems: 20,
-        enabled: 0,
-        closeOnSelect: false
-      }
-    });
-
-    document.querySelectorAll(".bu").forEach(input => {
-      input.addEventListener("change", () => {
-        const buSeleccionado = input.value;
-        const modelos = modelosPorBU[buSeleccionado] || [];
-        tagify.removeAllTags();
-        tagify.settings.whitelist = modelos;
-        tagify.dropdown.show(); // mostrar sugerencias al cambiar
-      });
-    });
-
-    function setDate(tipo) {
-      const hoy = new Date();
-      let desde = new Date();
-      if (tipo === "semana") {
-        const dia = hoy.getDay();
-        desde.setDate(hoy.getDate() - (dia === 0 ? 6 : dia - 1));
-      } else if (tipo === "7dias") {
-        desde.setDate(hoy.getDate() - 6);
-      } else if (tipo === "mes") {
-        desde.setDate(1);
-      }
-      const yyyy = hoy.getFullYear();
-      const mm = (hoy.getMonth() + 1).toString().padStart(2, '0');
-      const dd = hoy.getDate().toString().padStart(2, '0');
-      const hoyStr = `${yyyy}-${mm}-${dd}`;
-
-      const yyyyD = desde.getFullYear();
-      const mmD = (desde.getMonth() + 1).toString().padStart(2, '0');
-      const ddD = desde.getDate().toString().padStart(2, '0');
-      const desdeStr = `${yyyyD}-${mmD}-${ddD}`;
-
-      document.getElementById("fromDate").value = desdeStr;
-      document.getElementById("toDate").value = hoyStr;
-    }
-
     function generarURL() {
-      const modelos = tagify.value.map(tag => tag.value).join(",");
-      const location = document.getElementById("location").value;
-      const from = document.getElementById("fromDate").value;
-      const to = document.getElementById("toDate").value;
+      const uutTypes = document.getElementById('uutTypes').value.trim();
+      const buChecked = document.querySelector('input[name="bu"]:checked');
+      const location = document.getElementById('location').value.trim();
+      const fromDate = document.getElementById('fromDate').value;
+      const toDate = document.getElementById('toDate').value;
 
-      if (!modelos || !from || !to || !location) {
-        alert("Completa todos los campos.");
+      if (!uutTypes || !buChecked || !location || !fromDate || !toDate) {
+        alert("Por favor completa todos los campos.");
         return;
       }
 
-      const url = `https://cesium.cisco.com/ccc/yield.html?uutType=${modelos}&location=${location}&fromDate=${from}&toDate=${to}`;
-      document.getElementById("resultado").value = url;
+      const url = `https://cesium.cisco.com/ccc/yield.html?uuttype=${encodeURIComponent(uutTypes)}&location=${location}&fromdate=${fromDate}&todate=${toDate}`;
+      document.getElementById('resultado').innerText = url;
     }
 
     function copiarURL() {
-      const resultado = document.getElementById("resultado");
-      resultado.select();
-      document.execCommand("copy");
+      const text = document.getElementById('resultado').innerText;
+      if (text) {
+        navigator.clipboard.writeText(text);
+        alert("URL copiada al portapapeles.");
+      }
     }
 
     function abrirURL() {
-      const url = document.getElementById("resultado").value;
-      if (url) window.open(url, "_blank");
+      const url = document.getElementById('resultado').innerText;
+      if (url) {
+        window.open(url, '_blank');
+      }
     }
   </script>
 </body>
