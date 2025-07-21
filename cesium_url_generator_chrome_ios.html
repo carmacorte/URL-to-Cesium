@@ -61,15 +61,22 @@
     .group-checks legend {
       font-weight: bold;
       color: #374151;
+      margin-bottom: 6px;
     }
 
-    .group-checks label {
-     display: flex;
-     align-items: center;
-     gap: 8px;
-     margin-bottom: 6px;
-     font-size: 16px;
-     }
+    .group-checks.two-columns {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 6px 12px;
+    }
+
+    .group-checks.two-columns label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+    }
+
     .date-row {
       display: flex;
       gap: 10px;
@@ -97,7 +104,7 @@
   <label for="uutTypes">UUT Types (separados por coma):</label>
   <input type="text" id="uutTypes" placeholder="800-110045-01,800-110945-01"/>
 
-  <fieldset class="group-checks">
+  <fieldset class="group-checks two-columns">
     <legend>Business Unit</legend>
     <label><input type="checkbox" onclick="toggleGroup('CVEBU')"> CVEBU</label>
     <label><input type="checkbox" onclick="toggleGroup('CRBU')"> CRBU</label>
@@ -136,28 +143,28 @@
 
   <script>
     const groups = {
-  CVEBU: [
-    "800-108480-%", "800-109399-%", "800-110045-%", "800-110945-%",
-    "800-112271-%", "800-137504-%", "800-147504-%", "73-103450-%"
-  ],
-  CRBU: [
-    "88-LC0-36FH", "88-LC0-36FH-M", "8804-FC1", "8808-FC1", "8808-FC0"
-  ],
-  TPK: [
-    "800-108035-%", "800-108035-%", "800-108036-%",
-    "800-108037-%", "800-108038-%", "800-110666-%"
-  ],
-  WA: [
-    "800-109498-%", "800-109499-%", "800-109500-%"
-  ], // ← esta coma era necesaria
-  NM: [
-    "73-101944-%", "73-103122-01", "73-102888-01", "73-101945-03", 
-    "73-102482-02", "73-102418-04", "73-103125-02"
-  ],
-  Oval: [
-    "73-102483-%"
-  ]
-};
+      CVEBU: [
+        "800-108480-%", "800-109399-%", "800-110045-%", "800-110945-%",
+        "800-112271-%", "800-137504-%", "800-147504-%", "73-103450-%"
+      ],
+      CRBU: [
+        "88-LC0-36FH", "88-LC0-36FH-M", "8804-FC1", "8808-FC1", "8808-FC0"
+      ],
+      TPK: [
+        "800-108035-%", "800-108035-%", "800-108036-%",
+        "800-108037-%", "800-108038-%", "800-110666-%"
+      ],
+      WA: [
+        "800-109498-%", "800-109499-%", "800-109500-%"
+      ],
+      NM: [
+        "73-101944-%", "73-103122-01", "73-102888-01", "73-101945-03", 
+        "73-102482-02", "73-102418-04", "73-103125-02"
+      ],
+      Oval: [
+        "73-102483-%"
+      ]
+    };
 
     function toggleGroup(groupName) {
       const input = document.getElementById("uutTypes");
