@@ -100,6 +100,9 @@
     <label><input type="checkbox" onclick="toggleGroup('CVEBU')"> CVEBU</label>
     <label><input type="checkbox" onclick="toggleGroup('CRBU')"> CRBU</label>
     <label><input type="checkbox" onclick="toggleGroup('TPK')"> TPK</label>
+    <label><input type="checkbox" onclick="toggleGroup('WA')"> WA</label>
+    <label><input type="checkbox" onclick="toggleGroup('NM')"> NM</label>
+    <label><input type="checkbox" onclick="toggleGroup('Oval')"> Oval</label>
   </fieldset>
 
   <label for="location">Location:</label>
@@ -131,27 +134,28 @@
 
   <script>
     const groups = {
-      CVEBU: [
-        "800-108480-%", "800-109399-%", "800-110045-%", "800-110945-%",
-        "800-112271-%", "800-137504-%", "800-147504-%", "73-103450-%"
-      ],
-      CRBU: [
-        "88-LC0-36FH", "88-LC0-36FH-M", "8804-FC1", "8808-FC1", "8808-FC0"
-      ],
-      TPK: [
-        "800-108035-%", "800-108035-%", "800-108036-%",
-        "800-108037-%", "800-108038-%", "800-110666-%"
-      ],
-      WA: [
-        "800-109498-%", "800-109499-%", "800-109500-%"
-      ]
-      NM: [
-        "73-101944-%", "73-103122-01", "73-102888-01", "73-101945-03", 
-      "73-102482-02", "73-102418-04", "73-103125-02"]
-      Oval: [
-        "73-102483-%"
-      ]
-    };
+  CVEBU: [
+    "800-108480-%", "800-109399-%", "800-110045-%", "800-110945-%",
+    "800-112271-%", "800-137504-%", "800-147504-%", "73-103450-%"
+  ],
+  CRBU: [
+    "88-LC0-36FH", "88-LC0-36FH-M", "8804-FC1", "8808-FC1", "8808-FC0"
+  ],
+  TPK: [
+    "800-108035-%", "800-108035-%", "800-108036-%",
+    "800-108037-%", "800-108038-%", "800-110666-%"
+  ],
+  WA: [
+    "800-109498-%", "800-109499-%", "800-109500-%"
+  ], // ← esta coma era necesaria
+  NM: [
+    "73-101944-%", "73-103122-01", "73-102888-01", "73-101945-03", 
+    "73-102482-02", "73-102418-04", "73-103125-02"
+  ],
+  Oval: [
+    "73-102483-%"
+  ]
+};
 
     function toggleGroup(groupName) {
       const input = document.getElementById("uutTypes");
