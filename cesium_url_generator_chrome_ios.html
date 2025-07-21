@@ -52,16 +52,19 @@
       margin-bottom: 6px;
     }
     .group-checks.two-columns {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px 12px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px 12px;
+    }
+    @media (max-width: 480px) {
+      .group-checks.two-columns {
+        grid-template-columns: 1fr;
+      }
     }
     .group-checks.two-columns label {
       display: flex;
       align-items: center;
       gap: 8px;
-      width: 45%;
-      min-width: 140px;
       font-size: 15px;
     }
     .date-row {
