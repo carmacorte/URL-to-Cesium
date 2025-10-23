@@ -101,6 +101,8 @@
     <label><input type="checkbox" onclick="toggleGroup('WA')"> WA</label>
     <label><input type="checkbox" onclick="toggleGroup('NM')"> NM</label>
     <label><input type="checkbox" onclick="toggleGroup('Oval')"> Oval</label>
+    <label><input type="checkbox" onclick="toggleGroup('CVEBU')"> CVEBU 73</label>
+    <label><input type="checkbox" onclick="toggleGroup('CVEBU')"> IOTBU 73/label>
   </fieldset>
 
   <label for="location">Location:</label>
@@ -127,7 +129,6 @@
 
   <div class="button-row">
     <button onclick="generateURL()">🎯 Generar URL</button>
-    <button onclick="copyURL()">📋 Copiar</button>
     <button onclick="openURL()">🌐 Abrir</button>
   </div>
 
@@ -143,8 +144,10 @@
       TPK: ["800-108035-%", "800-108036-%", "800-108037-%", "800-108038-%", "800-110666-%"],
       WA: ["800-109498-%", "800-109499-%", "800-109500-%"],
       NM: ["73-101944-%", "73-103122-01", "73-102888-01", "73-101945-03", "73-102482-02", "73-102418-04", "73-103125-02"],
-      Oval: ["73-102483-%"]
-    };
+      Oval: ["73-102483-%"],
+      CVEBU 73: ["73-102885-%","73-102226-%", "73-103226-%", "73-102701-%", "73-102121-%", "73-103360-%", "73-104022-%", "73-101504-%","73-102197-%"],
+      IOTBU 73: ["73-101441-%","73-101439-%", "73-102239-%"],
+      };
 
     function toggleGroup(groupName) {
       const input = document.getElementById("uutTypes");
