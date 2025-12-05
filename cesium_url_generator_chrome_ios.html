@@ -109,6 +109,13 @@
   <label for="area">Área:</label>
   <input type="text" id="area" placeholder="Ej. PCB%" value="Pcb%"/>
 
+  <!-- NUEVO: SELECTOR AUTOMÁTICO DE ÁREA -->
+  <div class="button-row" style="margin-top:-10px; margin-bottom:5px;">
+    <button type="button" onclick="setArea('Pcb%')">PCB%</button>
+    <button type="button" onclick="setArea('Sys%')">SYS%</button>
+    <button type="button" onclick="setArea('')">Vacío</button>
+  </div>
+
   <div class="date-row">
     <div style="flex:1;">
       <label for="fromDate">From Date:</label>
@@ -153,11 +160,9 @@
 
       const groupItems = groups[groupName] || [];
 
-      // Normalizar quitando %
       const normalized = current.map(i => i.replace(/%/g, "").trim());
       const normalizedGroup = groupItems.map(i => i.replace(/%/g, "").trim());
 
-      // Verificar si ya está presente todo el grupo (por prefijo)
       const hasGroup = normalizedGroup.every(g =>
         normalized.some(item => item.startsWith(g))
       );
@@ -165,17 +170,19 @@
       let updated;
 
       if (hasGroup) {
-        // Quitar modelos
         updated = current.filter(item => {
           const clean = item.replace(/%/g, "").trim();
           return !normalizedGroup.some(g => clean.startsWith(g));
         });
       } else {
-        // Agregar modelos sin duplicar
         updated = [...new Set(current.concat(groupItems))];
       }
 
       input.value = updated.join(",");
+    }
+
+    function setArea(value) {
+      document.getElementById("area").value = value;
     }
 
     function setThisWeek() {
@@ -189,7 +196,7 @@
     function generateURL() {
       const uut = document.getElementById("uutTypes").value.trim();
       const location = document.getElementById("location").value.trim();
-      const area = document.getElementById("area").value.trim() || "Pcb%";
+      const area = document.getElementById("area").value.trim();
       const from = document.getElementById("fromDate").value;
       const to = document.getElementById("toDate").value;
 
@@ -202,7 +209,7 @@
       const encodedLoc = encodeURIComponent(location);
       const encodedArea = encodeURIComponent(area);
 
-      const url = 
+      const url =
         `https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield?SI=${encodedUUT},${encodedArea},${encodedLoc}` +
         `&SD=${from}&ED=${to}&datetype=nodate&yieldtype=firstpass&yielddatetype=rectime` +
         `&uuttype=${encodedUUT}&area=${encodedArea}&location=${encodedLoc}&timezone=US%2FMountain`;
