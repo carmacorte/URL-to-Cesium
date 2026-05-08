@@ -7660,7 +7660,7 @@ function traceOpsBuildAnalysisCacheKey(fileHash, filterMode, days, dateFrom, dat
 var TRACEOPS_LOCAL_CACHE_DB = "SMTinelLocalCache";
 var TRACEOPS_LOCAL_CACHE_STORE = "yieldFlowSessions";
 var TRACEOPS_LOCAL_CACHE_KEY = "latestYieldFlow";
-var TRACEOPS_LOCAL_CACHE_VERSION = "yieldflow-cache-v8-wo-currentevent-repair-sn-scope";
+var TRACEOPS_LOCAL_CACHE_VERSION = "yieldflow-cache-v6-yield-breakdown-aging-buckets";
 
 function traceOpsLocalCacheSupported() {
     return typeof indexedDB !== "undefined";
@@ -7988,14 +7988,7 @@ var TRACEOPS_YIELD_ACTION_TRACKER_ROWS = [];
 var TRACEOPS_YIELD_SN_TO_SFC = {};
 var TRACEOPS_YIELD_REPAIRS_BY_SN = {};
 var TRACEOPS_YIELD_SFC_EVENTS = [];
-var TRACEOPS_YIELD_STATION_NO_BY_CODE = {};
-TRACEOPS_YIELD_FLOW_STATIONS = (TRACEOPS_YIELD_STATION_SEQUENCE || []).map(function(s){ return String(s.station || '').trim(); }).filter(Boolean);
-var TRACEOPS_YIELD_STATION_ORDER = {};
-TRACEOPS_YIELD_FLOW_STATIONS.forEach(function(st, idx){
-    TRACEOPS_YIELD_STATION_ORDER[st] = idx;
-    var code = traceOpsYieldNorm(st).replace(/\s+/g, '').toUpperCase();
-    if (code && TRACEOPS_YIELD_STATION_NO_BY_CODE[code] == null) TRACEOPS_YIELD_STATION_NO_BY_CODE[code] = Number((TRACEOPS_YIELD_STATION_SEQUENCE[idx] || {}).no || (idx + 1));
-});
+var TRACEOPS_YIELD_STATION_ORDER = { SMT: 0, PTH: 1, STOCKIN: 2, FT: 3 };
 function traceOpsYieldNorm(value) {
     return String(value == null ? "" : value).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
 }
@@ -8029,13 +8022,11 @@ function traceOpsYieldToNumber(value) {
     return isFinite(n) ? n : 0;
 }
 function traceOpsYieldCleanWo(value) {
-    var st = String(value == null ? "" : value).trim().toUpperCase();
+    var st = String(value == null ? "" : value).trim();
     if (!st)
         return "";
     if (/^\d+(\.0+)?$/.test(st))
         st = String(Math.trunc(Number(st)));
-    st = st.replace(/^0+(RW)/i, '$1');
-    if (/^RW0+1\d+/i.test(st)) st = st.replace(/^RW0+(1\d+)/i, 'RW$1');
     return st;
 }
 function traceOpsYieldCleanSn(value) {
@@ -8069,7 +8060,10 @@ function traceOpsYieldBridgeKeyFromParts(sn, parentsernum, partsernum) {
     sn = traceOpsYieldCleanSn(sn);
     parentsernum = traceOpsYieldCleanSn(parentsernum);
     partsernum = traceOpsYieldCleanSn(partsernum);
-    return sn || parentsernum || partsernum;
+    // Cesium normalized export does not require SNLink.
+    // Primary bridge: PARENTSERNUM. Fallback: sysserialno/SERNUM.
+    // partsernum is only kept for legacy Repair Record compatibility.
+    return parentsernum || sn || partsernum;
 }
 function traceOpsYieldIndexByBridge(map, row) {
     if (!map || !row) return;
@@ -8296,18 +8290,19 @@ function traceOpsYieldResolveCiscoWeek(row, calendarMap) {
     return direct || "Imported";
 }
 function traceOpsYieldClassifyStation(value) {
-    var raw = String(value == null ? "" : value).trim();
-    if (!raw) return "";
-    var code = raw.toUpperCase().replace(/[^A-Z0-9*]+/g, "");
-    if (Object.prototype.hasOwnProperty.call(TRACEOPS_YIELD_STATION_ORDER || {}, code)) return code;
-    var compact = traceOpsYieldNorm(raw).replace(/\s+/g, '').toUpperCase();
-    if (Object.prototype.hasOwnProperty.call(TRACEOPS_YIELD_STATION_ORDER || {}, compact)) return compact;
-    var num = raw.match(/^0*(\d{1,3})$/);
-    if (num) {
-        var no = String(Number(num[1])).padStart(3, '0');
-        var hit = (TRACEOPS_YIELD_STATION_SEQUENCE || []).find(function(s){ return String(s.no).padStart(3, '0') === no; });
-        if (hit && hit.station) return String(hit.station).trim();
-    }
+    var t = traceOpsYieldNorm(value);
+    if (!t)
+        return "";
+    if (/(paste|printer|print|screen print|solder paste|impresion|spi)/.test(t))
+        return "";
+    if (/(smts*loading|smtloading|loading|load board|loader|smt|aois*2|aoi2|aois*4|aoi4|aoi|optical|placement|picks*place|mounter|reflow)/.test(t))
+        return "SMT";
+    if (/(router|routing|depanel|depane|vis*2|vi2|vi|visual|inspection|inspeccion|insp|ict|in circuit|pth|presss*fit|pressfit)/.test(t))
+        return "PTH";
+    if (/(stocks*in|stockin|stock|almacen|wip|store|shipping prep|prep.*ft)/.test(t))
+        return "STOCKIN";
+    if (/(pcbassy|pcbp2|pcb2c|functional|funcional|final test|fct|ft|test station|station fpy)/.test(t))
+        return "FT";
     return "";
 }
 function traceOpsYieldClassifyFtArea(value) {
@@ -9075,9 +9070,7 @@ function traceOpsYieldBuildFromImported(workRows, sfcRows, repairRows, sourceMet
         var sfcBu = String(traceOpsYieldPick(row, ["BU", "Business Unit", "bu", "businessunit", "Business_Unit", "BU/Division", "Division", "Org", "Organization", "NGFWBU", "Business_Group"]) || "").trim();
         if (!sfcBu && line) { var _linePfx = line.split('-')[0].trim(); if (_linePfx && _linePfx.length > 2 && !/^\d+$/.test(_linePfx)) sfcBu = _linePfx; }
         if (!sfcBu && event) { var _evPfx = event.split('-')[0].trim(); if (_evPfx && _evPfx.length > 2 && !/^\d+$/.test(_evPfx) && !/^(stockin|ict|aoi|smt|spi|pth|ft)$/i.test(_evPfx)) sfcBu = _evPfx; }
-        var stationNoRaw = traceOpsYieldPick(row, ["Station", "station", "Station No", "No"]);
-        var sfcStationRaw = traceOpsYieldPick(row, ["sfcstation", "SFC Station", "SFCStation"]);
-        var station = traceOpsYieldClassifyStation(stationNoRaw) || traceOpsYieldClassifyStation(sfcStationRaw) || traceOpsYieldClassifyStation(event) || String(event || '').trim().toUpperCase();
+        var station = traceOpsYieldClassifyStation(event);
         var dbSfc = traceOpsYieldApplyDbModel(sku, family, sfcBu);
         sku = dbSfc.sku || sku;
         family = dbSfc.family || family;
@@ -9164,7 +9157,7 @@ function traceOpsYieldBuildFromImported(workRows, sfcRows, repairRows, sourceMet
         if (!repairRowsBySnRaw[sn])
             repairRowsBySnRaw[sn] = [];
         repairRowsBySnRaw[sn].push(row);
-        var wo = (sfc && sfc.wo) || traceOpsYieldCleanWo(traceOpsYieldPick(row, ["Workorderno", "workorderno", "Work Order", "WO", "Order", "Orden", "WorkOrder"])) || "";
+        var wo = traceOpsYieldCleanWo(traceOpsYieldPick(row, ["Workorderno", "workorderno", "Work Order", "WO", "Order", "Orden", "WorkOrder"])) || (sfc && sfc.wo) || "";
         // SFC is authoritative for product scope. Repair Record SKU columns can be component/fail-SKU
         // and must not reassign the serial to a different model or BU.
         var repairSku = String(traceOpsYieldPick(row, ["SkuNo", "Key_Fail_SKU", "Key Fail SKU", "skuno", "sku", "model", "part number", "pn", "Modelo"]) || "").trim();
@@ -9176,7 +9169,7 @@ function traceOpsYieldBuildFromImported(workRows, sfcRows, repairRows, sourceMet
         var location = String(traceOpsYieldPick(row, ["FailLocation", "Fail Location", "Location", "Reference", "Reference Designator", "RefDes", "Referencia", "Area"]) || "N/D").trim();
         var pn = traceOpsYieldComponentCodeFromRepair(row);
         var componentInfo = traceOpsYieldEnrichComponent(pn);
-        var station = traceOpsYieldClassifyStation(traceOpsYieldPick(row, ["Station", "Process", "Area", "Current Event", "Evento"])) || (sfc && sfc.station) || String(traceOpsYieldPick(row, ["Station", "Process", "Area", "Current Event", "Evento"]) || "").trim().toUpperCase();
+        var station = traceOpsYieldClassifyStation(traceOpsYieldPick(row, ["Station", "Process", "Area", "Current Event", "Evento"])) || (sfc && sfc.station) || "";
         var repairTime = traceOpsYieldParseDate(traceOpsYieldPick(row, ["RepairTime", "Repair Time", "Repair Date", "Repaired Date", "Timestamp", "DateTime", "Fecha", "Fecha Hora"]));
         var dbRep = traceOpsYieldApplyDbModel(sku, family, (sfc && sfc.bu) || "");
         // Keep SFC SKU/family/BU if present; DB Model is enrichment only when SFC is blank.
@@ -9232,7 +9225,7 @@ function traceOpsYieldBuildFromImported(workRows, sfcRows, repairRows, sourceMet
             }
         });
         var defectSeenByStation = {};
-        repairList.forEach(function (rep) { var st = traceOpsYieldClassifyStation(rep.station || rep.detectionStation || "") || String(rep.station || rep.detectionStation || "REPAIR").trim().toUpperCase(); if (!defectSeenByStation[st])
+        repairList.forEach(function (rep) { var st = rep.responsibleArea || traceOpsYieldClassifyResponsibleArea(rep.rootCause || rep.failureMode || rep.symptom || ""); if (!st || st === "UNCLASSIFIED") st = rep.station || "SMT"; if (!defectSeenByStation[st])
             defectSeenByStation[st] = {}; if (rep.sn && !defectSeenByStation[st][rep.sn]) {
             defectSeenByStation[st][rep.sn] = true;
             if (!defectsByStation[st])
@@ -9583,59 +9576,53 @@ function traceOpsYieldNormalizeSequenceStation(value) {
     return raw;
 }
 
-function traceOpsYieldBuildStationSequenceBreakdown(snToSfc, ftRows, filters) {
-    filters = filters || {};
+function traceOpsYieldBuildStationSequenceBreakdown(snToSfc, ftRows) {
     var sequence = TRACEOPS_YIELD_STATION_SEQUENCE || [];
     var seqMap = {};
     sequence.forEach(function (s, idx) {
         var code = traceOpsYieldNormalizeSequenceStation(s.station);
-        if (code && !seqMap[code]) seqMap[code] = { no: s.no, station: s.station, qty: 0, aging: { d0_30: 0, d31_60: 0, d61_90: 0, d91_365: 0, over1y: 0 }, serials: [], idx: idx };
+        if (code && !seqMap[code]) seqMap[code] = { no: s.no, station: s.station, qty: 0, idx: idx, aging: traceOpsYieldNewAgeBuckets(), snMap: {} };
     });
-    function rowMatches(r) {
-        r = r || {};
-        var snFilter = traceOpsYieldCleanSn(filters.sn || filters.serial || '');
-        return traceOpsYieldMatchesFilter(r.bu, filters.bu) &&
-            traceOpsYieldMatchesFilter(r.family, filters.family) &&
-            traceOpsYieldMatchesFilter(r.sku, filters.sku) &&
-            traceOpsYieldMatchesFilter(r.week, filters.week) &&
-            traceOpsYieldMatchesFilter(r.line, filters.line) &&
-            traceOpsYieldMatchesFilter(String(r.wo || ''), filters.wo) &&
-            (!filters.sfcStation || filters.sfcStation === 'ALL' || traceOpsYieldNormalizeSequenceStation(r.station || r.event || '') === traceOpsYieldNormalizeSequenceStation(filters.sfcStation)) &&
-            (!snFilter || traceOpsYieldCleanSn(r.sn || r.sfcSn || '').indexOf(snFilter) >= 0);
-    }
-    function agingBucket(buildStartDate) {
-        var dt = traceOpsYieldParseDate(buildStartDate);
-        if (!dt) return 'd0_30';
-        var days = Math.max(0, Math.floor((Date.now() - new Date(dt).getTime()) / 86400000));
-        if (days <= 30) return 'd0_30';
-        if (days <= 60) return 'd31_60';
-        if (days <= 90) return 'd61_90';
-        if (days <= 365) return 'd91_365';
-        return 'over1y';
-    }
     var snCurrent = {};
+    var snBuildDate = {};
     Object.keys(snToSfc || {}).forEach(function (k) {
         var r = snToSfc[k] || {};
         var sn = traceOpsYieldCleanSn(r.sn || r.sfcSn || "");
-        if (!sn || snCurrent[sn] || !rowMatches(r)) return;
-        var st = traceOpsYieldNormalizeSequenceStation(r.station || r.event || r.currentEvent || "");
-        var rec = Object.assign({}, r, { currentStation: st || 'UNMAPPED', agingBucket: agingBucket(r.buildStartDate) });
-        snCurrent[sn] = rec;
+        if (!sn || snCurrent[sn]) return;
+        var st = traceOpsYieldNormalizeSequenceStation(r.event || r.currentEvent || r.station || "");
+        snCurrent[sn] = st || "UNMAPPED";
+        snBuildDate[sn] = r.buildStartDate || r.buildStart || r.startDate || r.date || r.eventTime || "";
     });
+    var latestFtBySn = {};
+    (ftRows || []).forEach(function (r) {
+        var sn = traceOpsYieldCleanSn(r.sn || r.sfcSn || r.cesiumSn || "");
+        if (!sn) return;
+        var st = traceOpsYieldNormalizeSequenceStation(r.testArea || r.station || "");
+        if (!st) return;
+        var tv = r.recordTime ? new Date(r.recordTime).getTime() : NaN;
+        var t = isNaN(tv) ? 0 : tv;
+        var prev = latestFtBySn[sn];
+        if (!prev || t >= prev.t) latestFtBySn[sn] = { station: st, t: t };
+    });
+    Object.keys(latestFtBySn).forEach(function (sn) { snCurrent[sn] = latestFtBySn[sn].station; });
     Object.keys(snCurrent).forEach(function (sn) {
-        var rec = snCurrent[sn];
-        var st = rec.currentStation;
+        var st = snCurrent[sn];
         if (seqMap[st]) {
             seqMap[st].qty += 1;
-            if (seqMap[st].aging[rec.agingBucket] != null) seqMap[st].aging[rec.agingBucket] += 1;
-            seqMap[st].serials.push({ sn: sn, wo: rec.wo || '', sku: rec.sku || '', family: rec.family || '', bu: rec.bu || '', station: st, event: rec.event || st, week: rec.week || '', line: rec.line || '', buildStartDate: rec.buildStartDate || '', agingBucket: rec.agingBucket });
+            seqMap[st].snMap[sn] = true;
+            traceOpsYieldAddAgeBucket(seqMap[st], snBuildDate[sn] || "");
         }
     });
     var total = Object.keys(snCurrent).length;
-    var rows = Object.keys(seqMap).map(function (k) { var row = seqMap[k]; row.flowPct = total ? (row.qty / total * 100) : 0; return row; }).sort(function (a, b) { return a.idx - b.idx; });
-    return { totalUnits: total, rows: rows.filter(function (r) { return r.qty > 0; }), allRows: rows };
+    var totalAging = traceOpsYieldNewAgeBuckets();
+    Object.keys(snCurrent).forEach(function(sn) {
+        var key = traceOpsYieldAgeBucketKey(traceOpsYieldBuildAgeDays(snBuildDate[sn] || ""));
+        totalAging[key] = Number(totalAging[key] || 0) + 1;
+    });
+    var rows = Object.keys(seqMap).map(function (k) { return seqMap[k]; }).sort(function (a, b) { return a.idx - b.idx; });
+    rows.forEach(function (r) { r.flowPct = total ? (r.qty / total * 100) : 0; });
+    return { totalUnits: total, rows: rows.filter(function (r) { return r.qty > 0; }), allRows: rows, aging: totalAging };
 }
-
 function traceOpsBuildYieldFlowCauseSummary(rows) {
     var map = {};
     (rows || []).forEach(function (r) {
@@ -9934,28 +9921,55 @@ function traceOpsYieldDefaultDueDate(priority) {
 }
 
 
+function traceOpsYieldBuildAgeDays(value) {
+    if (value == null || value === "") return null;
+    var parsed = traceOpsYieldParseDate(value);
+    var d = new Date(String(parsed || value).replace(' ', 'T'));
+    if (isNaN(d.getTime())) d = new Date(String(parsed || value));
+    if (isNaN(d.getTime())) return null;
+    var days = Math.floor((Date.now() - d.getTime()) / 86400000);
+    return isFinite(days) ? Math.max(0, days) : null;
+}
+function traceOpsYieldAgeBucketKey(days) {
+    if (days == null || !isFinite(Number(days))) return "unknown";
+    days = Number(days);
+    if (days <= 30) return "d0_30";
+    if (days <= 60) return "d31_60";
+    if (days <= 90) return "d61_90";
+    if (days <= 365) return "d91_365";
+    return "d365_plus";
+}
+function traceOpsYieldNewAgeBuckets() {
+    return { d0_30: 0, d31_60: 0, d61_90: 0, d91_365: 0, d365_plus: 0, unknown: 0 };
+}
+function traceOpsYieldAddAgeBucket(target, buildDate) {
+    if (!target.aging) target.aging = traceOpsYieldNewAgeBuckets();
+    var days = traceOpsYieldBuildAgeDays(buildDate);
+    var key = traceOpsYieldAgeBucketKey(days);
+    target.aging[key] = Number(target.aging[key] || 0) + 1;
+    return key;
+}
+
 function traceOpsYieldProcessNode(rawEvent) {
-    var exact = traceOpsYieldClassifyStation(rawEvent);
-    if (exact) return exact;
-    var e = String(rawEvent || '').toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    var e = String(rawEvent || '').toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     if (!e) return "UNKNOWN";
-    if (/STOCK\s*IN|STOCKIN/.test(e)) return "STOCKIN";
-    if (/PCB2C|PCB C|PCB-C/.test(e)) return "PCB2C";
     if (/PCBP2/.test(e)) return "PCBP2";
+    if (/PCB2C|PCB C|PCB-C/.test(e)) return "PCB2C";
+    if (/STOCK\s*IN|STOCKIN|FG|FINISH|COMPLETE/.test(e)) return "STOCKIN";
+    if (/WAVE|WAVE\s*SOLDER|SOLDER\s*WAVE/.test(e)) return "WAVE";
+    if (/VI\s*1|VI1|VISUAL\s*1|VISUAL INSPECTION 1/.test(e)) return "VI1";
+    if (/VI\s*2|VI2|VISUAL\s*2|VISUAL INSPECTION 2/.test(e)) return "VI2";
     if (/AOI\s*4|AOI4/.test(e)) return "AOI4";
     if (/AOI\s*2|AOI2/.test(e)) return "AOI2";
     if (/AOI/.test(e)) return "AOI";
-    if (/VI\s*2|VI2/.test(e)) return "VI2";
-    if (/VI\s*1|VI1|VI|VISUAL/.test(e)) return "VI";
-    if (/XRAY|X RAY|5DX|FIVE/.test(e)) return "XRAY";
-    if (/ICT/.test(e)) return "ICT";
-    if (/PICT/.test(e)) return "PICT";
-    if (/ROUTER|ROUTING/.test(e)) return "ROUTER";
-    if (/MRB/.test(e)) return "MRB";
-    return "UNKNOWN";
+    if (/SPI|PASTE|PRINT/.test(e)) return "SMT";
+    if (/ICT|FCT|FUNCTIONAL|FT/.test(e)) return "FT";
+    if (/PTH|ROUTER|PRESS|INSERT|SELECTIVE|SOLDER/.test(e)) return "PTH";
+    if (/SMT|LOADING|PLACEMENT|REFLOW/.test(e)) return "SMT";
+    return traceOpsYieldClassifyStation(e) || "UNKNOWN";
 }
 function traceOpsYieldProcessNodeOrder() {
-    return (TRACEOPS_YIELD_STATION_SEQUENCE || []).map(function(s){ return String(s.station || '').trim(); }).filter(Boolean);
+    return ["SMT", "AOI2", "AOI4", "VI1", "VI2", "WAVE", "PTH", "PCBP2", "PCB2C", "STOCKIN"];
 }
 function traceOpsYieldBuildWoProcessTimeline(sfcList, repairList, ftRows, wo) {
     var nodes = {}, order = traceOpsYieldProcessNodeOrder(), rawWo = String(wo || ""), normWo = rawWo.replace(/^0+/, "") || rawWo;
@@ -10006,7 +10020,7 @@ function traceOpsYieldBuildWoProcessTimeline(sfcList, repairList, ftRows, wo) {
         out.sort(function(x,y){ return y.hours - x.hours; });
         return out;
     }
-    var aoi4Vi1 = deltaBetween("AOI4", "VI");
+    var aoi4Vi1 = deltaBetween("AOI4", "VI1");
     var avg = aoi4Vi1.length ? aoi4Vi1.reduce(function(sum,x){ return sum + x.hours; },0) / aoi4Vi1.length : null;
     var max = aoi4Vi1.length ? aoi4Vi1[0].hours : null;
     var outliers = aoi4Vi1.filter(function(x){ return x.hours > 6; });
@@ -10016,10 +10030,10 @@ function traceOpsYieldBuildWoProcessTimeline(sfcList, repairList, ftRows, wo) {
     var oxidationRisk = (repairList || []).filter(function(r){ return /OXID|OXIDE|CORROS|CONTAM|WETTING|SOLDERABILITY|SOLDER/.test(String(r.rootCause || r.failureMode || r.symptom || r.repairSymptom || "").toUpperCase()); }).length;
     return {
         nodes: list,
-        criticalDelta: { label: "AOI4 → VI", samples: aoi4Vi1.length, avgHours: avg, maxHours: max, outliers: outliers.length, linkedRepair: linkedRepair.length, oxidationRisk: oxidationRisk, rows: aoi4Vi1 },
+        criticalDelta: { label: "AOI4 → VI1", samples: aoi4Vi1.length, avgHours: avg, maxHours: max, outliers: outliers.length, linkedRepair: linkedRepair.length, oxidationRisk: oxidationRisk, rows: aoi4Vi1 },
         narrative: aoi4Vi1.length
-            ? ("AOI4 → VI movement has " + aoi4Vi1.length + " measured SN, avg " + traceOpsYieldFlowFmtHoursDays(avg, 1) + ", max " + traceOpsYieldFlowFmtHoursDays(max, 1) + ". " + linkedRepair.length + " SN also have linked repair evidence.")
-            : "AOI4 → VI delta needs historical station timestamps. Current scope still shows unit distribution and downstream repair evidence by station."
+            ? ("AOI4 → VI1 movement has " + aoi4Vi1.length + " measured SN, avg " + traceOpsYieldFlowFmtHoursDays(avg, 1) + ", max " + traceOpsYieldFlowFmtHoursDays(max, 1) + ". " + linkedRepair.length + " SN also have linked repair evidence.")
+            : "AOI4 → VI1 delta needs historical station timestamps. Current scope still shows unit distribution and downstream repair evidence by station."
     };
 }
 function traceOpsYieldRenderWoProcessTimeline(item, woInsight, setYieldSerialModal) {
@@ -10046,8 +10060,8 @@ function traceOpsYieldRenderWoProcessTimeline(item, woInsight, setYieldSerialMod
         React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, flexWrap: "wrap", marginBottom: 10 } },
             React.createElement("div", null,
                 React.createElement("div", { style: { fontSize: 9.5, fontWeight: 900, color: "#1F3A5F", textTransform: "uppercase", letterSpacing: ".07em" } }, "WO Process Timeline"),
-                React.createElement("div", { style: { fontSize: 10.5, color: "#5F766C", marginTop: 3, lineHeight: 1.35 } }, "Compact station flow by Stations.txt sequence, current event and repair evidence.")),
-            React.createElement("span", { style: { fontSize: 9, fontWeight: 900, padding: "4px 8px", borderRadius: 999, background: delta.outliers ? "#FFF4F0" : "#EEF5FF", color: delta.outliers ? "#A43B2E" : "#1F3A5F", border: "1px solid " + (delta.outliers ? "#F1B5AE" : "#CFE0FB") } }, delta.samples ? ("AOI4 → VI avg " + traceOpsYieldFlowFmtHoursDays(delta.avgHours, 1)) : "Delta pending")),
+                React.createElement("div", { style: { fontSize: 10.5, color: "#5F766C", marginTop: 3, lineHeight: 1.35 } }, "Compact station flow, AOI4 → VI1 delta and repair evidence.")),
+            React.createElement("span", { style: { fontSize: 9, fontWeight: 900, padding: "4px 8px", borderRadius: 999, background: delta.outliers ? "#FFF4F0" : "#EEF5FF", color: delta.outliers ? "#A43B2E" : "#1F3A5F", border: "1px solid " + (delta.outliers ? "#F1B5AE" : "#CFE0FB") } }, delta.samples ? ("AOI4 → VI1 avg " + traceOpsYieldFlowFmtHoursDays(delta.avgHours, 1)) : "Delta pending")),
         React.createElement("div", { style: { display: "flex", gap: 7, overflowX: "auto", paddingBottom: 4, WebkitOverflowScrolling: "touch" } }, nodes.map(function(n, idx) {
             var risk = n.tone === "risk";
             var active = n.units > 0;
@@ -10065,7 +10079,7 @@ function traceOpsYieldRenderWoProcessTimeline(item, woInsight, setYieldSerialMod
             React.createElement("div", { style: { fontSize: 13, fontWeight: 900, color: "#102A43", marginTop: 3 } }, m[1])
         ); })),
         React.createElement("div", { style: { fontSize: 10.5, color: "#5F766C", lineHeight: 1.45, marginTop: 8 } }, timeline.narrative || "Timeline evidence pending."),
-        delta.rows && delta.rows.length ? React.createElement("button", { type: "button", onClick: function(){ setYieldSerialModal({ title: (item.workOrder || item.wo || "WO") + " · AOI4 → VI Delta", subtitle: "Serial movement delta · highest delay first", rows: (delta.rows || []).map(function(r){ return { sn: r.sn, wo: item.workOrder || item.wo, sku: item.sku || item.skuno, family: item.model || item.family, station: r.from + " → " + r.to, symptom: traceOpsYieldFlowFmtHoursDays(r.hours, 1), location: "From " + (r.fromTime || "N/D") + " to " + (r.toTime || "N/D") }; }) }); }, style: { marginTop: 8, fontSize: 9.5, fontWeight: 900, padding: "6px 10px", borderRadius: 999, background: "#EAF2FF", color: "#1F3A5F", border: "1px solid #CFE0FB", cursor: "pointer" } }, "View SN delta " + traceOpsYieldFlowFmt(delta.rows.length)) : null
+        delta.rows && delta.rows.length ? React.createElement("button", { type: "button", onClick: function(){ setYieldSerialModal({ title: (item.workOrder || item.wo || "WO") + " · AOI4 → VI1 Delta", subtitle: "Serial movement delta · highest delay first", rows: (delta.rows || []).map(function(r){ return { sn: r.sn, wo: item.workOrder || item.wo, sku: item.sku || item.skuno, family: item.model || item.family, station: r.from + " → " + r.to, symptom: traceOpsYieldFlowFmtHoursDays(r.hours, 1), location: "From " + (r.fromTime || "N/D") + " to " + (r.toTime || "N/D") }; }) }); }, style: { marginTop: 8, fontSize: 9.5, fontWeight: 900, padding: "6px 10px", borderRadius: 999, background: "#EAF2FF", color: "#1F3A5F", border: "1px solid #CFE0FB", cursor: "pointer" } }, "View SN delta " + traceOpsYieldFlowFmt(delta.rows.length)) : null
     );
 }
 
@@ -10812,7 +10826,7 @@ function traceOpsBuildYieldFlowModelLocalRaw(filters) {
             traceOpsYieldRowDateInRange(rr);
     });
     var ftAreaRows = traceOpsYieldBuildFtAreaRows(ftRows);
-    var stationSequenceBreakdown = traceOpsYieldBuildStationSequenceBreakdown(TRACEOPS_YIELD_SN_TO_SFC || {}, ftRows, filters);
+    var stationSequenceBreakdown = traceOpsYieldBuildStationSequenceBreakdown(TRACEOPS_YIELD_SN_TO_SFC || {}, ftRows);
     var cesiumCurrentBreakdown = traceOpsYieldBuildCesiumCurrentBreakdown(ftRows);
     var bgaUnits = riskRows.filter(function (x) { return /BGA|REBALL|U8300|ASIC|CPU|FPGA|UNDERFILL/i.test([x.symptom, x.location, x.family, x.sku].join(' ')); }).reduce(function (a, b) { return a + Number(b.risk || 0); }, 0);
     var stockinUnits = trackerRows.reduce(function (a, t) { return a + Number((t.completedByStation && t.completedByStation.STOCKIN) || 0); }, 0);
@@ -22438,18 +22452,28 @@ html body .smtinel-command-center .smtinel-cc-canvas{
                 React.createElement("div", { style: { padding: "14px 18px" } },
                     stationSequenceBreakdown.rows && stationSequenceBreakdown.rows.length ? React.createElement("div", null,
                         React.createElement("div", { style: { overflowX: "auto", border: "1px solid #E7EEF9", borderRadius: 12 } },
-                            React.createElement("table", { style: { width: "100%", borderCollapse: "collapse", minWidth: 460 } },
+                            React.createElement("table", { style: { width: "100%", borderCollapse: "collapse", minWidth: 820 } },
                                 React.createElement("thead", null, React.createElement("tr", { style: { background: "#F7FAFF" } },
                                     React.createElement("th", { style: { textAlign: "left", padding: "9px 10px", fontSize: 10, color: "#5F766C", borderBottom: "1px solid #E7EEF9" } }, "No"),
                                     React.createElement("th", { style: { textAlign: "left", padding: "9px 10px", fontSize: 10, color: "#5F766C", borderBottom: "1px solid #E7EEF9" } }, "Station"),
                                     React.createElement("th", { style: { textAlign: "right", padding: "9px 10px", fontSize: 10, color: "#5F766C", borderBottom: "1px solid #E7EEF9" } }, "Units"),
+                                    React.createElement("th", { style: { textAlign: "right", padding: "9px 10px", fontSize: 10, color: "#5F766C", borderBottom: "1px solid #E7EEF9" } }, "0-30d"),
+                                    React.createElement("th", { style: { textAlign: "right", padding: "9px 10px", fontSize: 10, color: "#5F766C", borderBottom: "1px solid #E7EEF9" } }, "31-60d"),
+                                    React.createElement("th", { style: { textAlign: "right", padding: "9px 10px", fontSize: 10, color: "#5F766C", borderBottom: "1px solid #E7EEF9" } }, "61-90d"),
+                                    React.createElement("th", { style: { textAlign: "right", padding: "9px 10px", fontSize: 10, color: "#5F766C", borderBottom: "1px solid #E7EEF9" } }, "91-365d"),
+                                    React.createElement("th", { style: { textAlign: "right", padding: "9px 10px", fontSize: 10, color: "#5F766C", borderBottom: "1px solid #E7EEF9" } }, ">1y"),
                                     React.createElement("th", { style: { textAlign: "right", padding: "9px 10px", fontSize: 10, color: "#5F766C", borderBottom: "1px solid #E7EEF9" } }, "Flow"))),
                                 React.createElement("tbody", null, stationSequenceBreakdown.rows.map(function (st, idx) { return React.createElement("tr", { key: "seq_" + st.no + "_" + st.station, style: { background: idx % 2 === 0 ? "#fff" : "#FBFDFF" } },
                                     React.createElement("td", { style: { padding: "8px 10px", fontSize: 10.5, color: "#5F766C", borderBottom: "1px solid #EEF3FA" } }, st.no),
                                     React.createElement("td", { style: { padding: "8px 10px", fontSize: 11, fontWeight: 800, color: "#102A43", borderBottom: "1px solid #EEF3FA" } }, st.station.replace(/_(2|3|4)$/, "")),
                                     React.createElement("td", { style: { padding: "8px 10px", fontSize: 11, fontWeight: 900, color: "#102A43", textAlign: "right", borderBottom: "1px solid #EEF3FA" } }, traceOpsYieldFlowFmt(st.qty)),
+                                    React.createElement("td", { style: { padding: "8px 10px", fontSize: 10.5, color: "#1A7A3C", fontWeight: 800, textAlign: "right", borderBottom: "1px solid #EEF3FA" } }, traceOpsYieldFlowFmt((st.aging || {}).d0_30 || 0)),
+                                    React.createElement("td", { style: { padding: "8px 10px", fontSize: 10.5, color: "#B87820", fontWeight: 800, textAlign: "right", borderBottom: "1px solid #EEF3FA" } }, traceOpsYieldFlowFmt((st.aging || {}).d31_60 || 0)),
+                                    React.createElement("td", { style: { padding: "8px 10px", fontSize: 10.5, color: "#A43B2E", fontWeight: 800, textAlign: "right", borderBottom: "1px solid #EEF3FA" } }, traceOpsYieldFlowFmt((st.aging || {}).d61_90 || 0)),
+                                    React.createElement("td", { style: { padding: "8px 10px", fontSize: 10.5, color: "#6B2DA8", fontWeight: 800, textAlign: "right", borderBottom: "1px solid #EEF3FA" } }, traceOpsYieldFlowFmt((st.aging || {}).d91_365 || 0)),
+                                    React.createElement("td", { style: { padding: "8px 10px", fontSize: 10.5, color: "#8A2C2C", fontWeight: 900, textAlign: "right", borderBottom: "1px solid #EEF3FA" } }, traceOpsYieldFlowFmt((st.aging || {}).d365_plus || 0)),
                                     React.createElement("td", { style: { padding: "8px 10px", fontSize: 10.5, color: "#2F6FB3", fontWeight: 800, textAlign: "right", borderBottom: "1px solid #EEF3FA" } }, traceOpsYieldFlowFmt(st.flowPct, 1) + "%")); })))),
-                        React.createElement("div", { style: { marginTop: 8, fontSize: 10, color: "#5F766C" } }, "Source: SFC current event + latest Cesium status by SN. One serial is counted in one current station only."))
+                        React.createElement("div", { style: { marginTop: 8, fontSize: 10, color: "#5F766C" } }, "Source: SFC current event + latest Cesium status by SN. One serial is counted in one current station only. Aging buckets are calculated from SFC Build Start Date."))
                     : React.createElement("div", { style: { border: "1px dashed #D9E6F7", borderRadius: 12, padding: "14px", fontSize: 11.5, color: "#5F766C", background: "#FBFDFF" } }, "No station-sequence data for the active scope."))),
             React.createElement("section", { style: { background: "#fff", border: "1px solid #D9E6F7", borderRadius: 16, overflow: "hidden" } },
                 React.createElement("div", { style: { padding: "14px 18px", borderBottom: "1px solid #ECF3FF", background: "#F7FAFF", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, flexWrap: "wrap" } },
