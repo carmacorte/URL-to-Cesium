@@ -19,6 +19,7 @@
       --shadow: 0 12px 32px rgba(23, 32, 24, 0.08);
       --radius: 24px;
       --radius-sm: 16px;
+      --page-gap: clamp(14px, 2.4vw, 42px);
     }
 
     * {
@@ -28,20 +29,29 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+    }
+
     body {
       min-height: 100vh;
       font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
       background: radial-gradient(circle at top left, rgba(74, 140, 111, 0.16), transparent 32rem), var(--bg);
       color: var(--text);
-      padding: 18px 14px 120px;
+      padding: 18px var(--page-gap) 120px;
+      overflow-x: hidden;
     }
 
     .shell {
-      width: min(920px, 100%);
-      margin: 0 auto;
+      width: 100%;
+      max-width: none;
+      margin: 0;
     }
 
     header {
+      width: 100%;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -103,6 +113,7 @@
     }
 
     .hero {
+      width: 100%;
       padding: 12px 4px 16px;
     }
 
@@ -127,7 +138,7 @@
     }
 
     h1 {
-      font-size: clamp(31px, 7vw, 56px);
+      font-size: clamp(31px, 6vw, 72px);
       line-height: 0.96;
       letter-spacing: -1.7px;
       font-weight: 900;
@@ -138,18 +149,21 @@
     }
 
     .grid {
+      width: 100%;
       display: grid;
       grid-template-columns: 1fr;
-      gap: 14px;
+      gap: 16px;
     }
 
-    @media (min-width: 780px) {
+    @media (min-width: 820px) {
       .grid.two {
-        grid-template-columns: 1.15fr 0.85fr;
+        grid-template-columns: minmax(0, 1.25fr) minmax(420px, 0.75fr);
+        align-items: start;
       }
     }
 
     .card {
+      width: 100%;
       background: rgba(255, 255, 255, 0.92);
       border: 1px solid rgba(223, 228, 221, 0.9);
       border-radius: var(--radius);
@@ -180,8 +194,7 @@
     }
 
     input,
-    textarea,
-    select {
+    textarea {
       width: 100%;
       border: 1.5px solid var(--line);
       border-radius: var(--radius-sm);
@@ -204,8 +217,7 @@
     }
 
     input:focus,
-    textarea:focus,
-    select:focus {
+    textarea:focus {
       border-color: var(--green);
       box-shadow: 0 0 0 4px rgba(74, 140, 111, 0.12);
     }
@@ -229,10 +241,23 @@
       gap: 9px;
     }
 
-    @media (min-width: 560px) {
+    @media (min-width: 620px) {
       .bu-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
+    }
+
+    @media (min-width: 1280px) {
+      .bu-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+
+    .quick-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
     }
 
     .bu-btn,
@@ -254,6 +279,11 @@
       font-size: 13px;
     }
 
+    .quick-btn {
+      padding: 10px 14px;
+      font-size: 13px;
+    }
+
     .bu-btn.active,
     .quick-btn.active {
       background: linear-gradient(135deg, var(--green), var(--blue));
@@ -268,28 +298,16 @@
       transform: scale(0.98);
     }
 
-    .quick-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 12px;
-    }
-
-    .quick-btn {
-      padding: 10px 14px;
-      font-size: 13px;
-    }
-
     .actions {
       position: fixed;
-      left: max(14px, env(safe-area-inset-left));
-      right: max(14px, env(safe-area-inset-right));
+      left: var(--page-gap);
+      right: var(--page-gap);
       bottom: max(14px, env(safe-area-inset-bottom));
       z-index: 20;
-      width: min(920px, calc(100% - 28px));
-      margin: 0 auto;
+      width: auto;
+      max-width: none;
       display: grid;
-      grid-template-columns: 1fr 0.75fr;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 0.75fr);
       gap: 10px;
       padding: 10px;
       border: 1px solid rgba(223, 228, 221, 0.96);
@@ -386,6 +404,16 @@
         <label for="location">Location</label>
         <input id="location" type="text" value="FJZ" autocomplete="off" />
 
+        <div style="margin-top: 12px;">
+          <label for="area">Área</label>
+          <input id="area" type="text" value="Pcb%" autocomplete="off" />
+          <div class="quick-row">
+            <button class="quick-btn active" type="button" data-area="Pcb%">PCB%</button>
+            <button class="quick-btn" type="button" data-area="Sys%">SYS%</button>
+            <button class="quick-btn" type="button" data-area="">Vacío</button>
+          </div>
+        </div>
+
         <div class="form-row">
           <div>
             <label for="fromDate">Start Date</label>
@@ -405,17 +433,17 @@
       </div>
     </section>
 
-    <section class="card" style="margin-top: 14px;">
+    <section class="card" style="margin-top: 16px;">
       <div class="card-title">UUT Types</div>
       <label for="uutTypes">Part numbers o familias separados por coma</label>
       <textarea id="uutTypes" spellcheck="false" placeholder="Ej. 800-110045-%, 73-102885-%"></textarea>
       <p class="hint">Se aceptan comodines con %. Las comas se conservan como separadores en la URL final.</p>
     </section>
 
-    <section class="card" style="margin-top: 14px;">
+    <section class="card" style="margin-top: 16px;">
       <div class="card-title">URL Generada</div>
       <textarea id="resultURL" class="result" readonly placeholder="La URL aparecerá aquí después de generar."></textarea>
-      <p class="hint">Formato aplicado: datetype=week, yieldtype=firstpass, yielddatetype=rectime, timezone=US/Mountain.</p>
+      <p class="hint">Formato aplicado: SI=UUT,Área,Location; datetype=week; yieldtype=firstpass; yielddatetype=rectime; timezone=US/Mountain.</p>
     </section>
   </main>
 
@@ -450,6 +478,7 @@
     const fromDate = document.getElementById("fromDate");
     const toDate = document.getElementById("toDate");
     const locationInput = document.getElementById("location");
+    const areaInput = document.getElementById("area");
     const resultURL = document.getElementById("resultURL");
     const toast = document.getElementById("toast");
 
@@ -495,11 +524,20 @@
       fromDate.value = formatDate(start);
       toDate.value = formatDate(end);
 
-      document.querySelectorAll(".quick-btn").forEach(btn => {
+      document.querySelectorAll("[data-range]").forEach(btn => {
         btn.classList.toggle("active", btn.dataset.range === range);
       });
       resultURL.value = "";
       showToast("Rango actualizado");
+    }
+
+    function setArea(value) {
+      areaInput.value = value;
+      document.querySelectorAll("[data-area]").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.area === value);
+      });
+      resultURL.value = "";
+      showToast(value ? `Área ${value}` : "Área vacía");
     }
 
     function getCleanList(value) {
@@ -516,6 +554,7 @@
     function generateURL() {
       const uutItems = getCleanList(uutInput.value);
       const location = locationInput.value.trim();
+      const area = areaInput.value.trim();
       const start = fromDate.value;
       const end = toDate.value;
 
@@ -541,14 +580,18 @@
 
       const encodedUUT = encodeList(uutItems);
       const encodedLocation = encodeURIComponent(location);
+      const encodedArea = encodeURIComponent(area);
+      const siParts = [encodedUUT, encodedArea, encodedLocation].filter(Boolean).join(",");
+
       const url = "https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield" +
-        `?SI=${encodedUUT},${encodedLocation}` +
+        `?SI=${siParts}` +
         `&SD=${start}` +
         `&ED=${end}` +
         "&datetype=week" +
         "&yieldtype=firstpass" +
         "&yielddatetype=rectime" +
         `&uuttype=${encodedUUT}` +
+        (area ? `&area=${encodedArea}` : "") +
         `&location=${encodedLocation}` +
         "&timezone=US%2FMountain";
 
@@ -588,13 +631,18 @@
     }
 
     renderBUButtons();
+
     buGrid.addEventListener("click", event => {
       const btn = event.target.closest(".bu-btn");
       if (btn) selectBU(btn.dataset.bu);
     });
 
-    document.querySelectorAll(".quick-btn").forEach(btn => {
+    document.querySelectorAll("[data-range]").forEach(btn => {
       btn.addEventListener("click", () => setRange(btn.dataset.range));
+    });
+
+    document.querySelectorAll("[data-area]").forEach(btn => {
+      btn.addEventListener("click", () => setArea(btn.dataset.area));
     });
 
     uutInput.addEventListener("input", () => {
@@ -602,7 +650,7 @@
       resultURL.value = "";
     });
 
-    [locationInput, fromDate, toDate].forEach(input => {
+    [locationInput, areaInput, fromDate, toDate].forEach(input => {
       input.addEventListener("input", () => resultURL.value = "");
     });
 
@@ -611,6 +659,7 @@
     resultURL.addEventListener("click", () => copyURL(true).then(() => showToast("URL copiada")));
 
     setRange("yesterday");
+    setArea("Pcb%");
     selectBU("IOTBU");
   </script>
 </body>
