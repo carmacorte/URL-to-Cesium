@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>SMTinel | Cesium Yield URL Generator</title>
+  <title>SMTinel | Test URL Generator</title>
   <style>
     :root {
       --bg: #f7f8f6;
@@ -148,6 +148,34 @@
       color: var(--blue);
     }
 
+    .platform-switch {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin: 6px 0 16px;
+    }
+
+    .platform-btn {
+      min-height: 50px;
+      padding: 12px 16px;
+      border: 1.5px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--blue);
+      cursor: pointer;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 850;
+      transition: transform 0.15s ease, border 0.15s ease, background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .platform-btn.active {
+      background: linear-gradient(135deg, var(--green), var(--blue));
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 10px 20px rgba(43, 90, 140, 0.18);
+    }
+
     .grid {
       width: 100%;
       display: grid;
@@ -194,7 +222,8 @@
     }
 
     input,
-    textarea {
+    textarea,
+    select {
       width: 100%;
       border: 1.5px solid var(--line);
       border-radius: var(--radius-sm);
@@ -217,7 +246,8 @@
     }
 
     input:focus,
-    textarea:focus {
+    textarea:focus,
+    select:focus {
       border-color: var(--green);
       box-shadow: 0 0 0 4px rgba(74, 140, 111, 0.12);
     }
@@ -294,7 +324,8 @@
 
     .bu-btn:active,
     .quick-btn:active,
-    .main-btn:active {
+    .main-btn:active,
+    .platform-btn:active {
       transform: scale(0.98);
     }
 
@@ -348,6 +379,10 @@
       line-height: 1.4;
     }
 
+    .hidden {
+      display: none !important;
+    }
+
     .toast {
       position: fixed;
       left: 50%;
@@ -384,12 +419,17 @@
           <div class="tagline">Trace · Monitor · Protect</div>
         </div>
       </div>
-      <div class="status-pill">Cesium Ready</div>
+      <div class="status-pill" id="statusPill">Cesium Ready</div>
     </header>
 
     <section class="hero">
       <small>Operational Intelligence</small>
-      <h1>Cesium<br><span>Yield URL</span></h1>
+      <h1>Test<br><span>URL Generator</span></h1>
+    </section>
+
+    <section class="platform-switch">
+      <button class="platform-btn active" type="button" data-platform="cesium">Cesium</button>
+      <button class="platform-btn" type="button" data-platform="genius">Genius</button>
     </section>
 
     <section class="grid two">
@@ -400,17 +440,46 @@
       </div>
 
       <div class="card">
-        <div class="card-title">Parámetros</div>
-        <label for="location">Location</label>
-        <input id="location" type="text" value="FJZ" autocomplete="off" />
+        <div class="card-title">Parámetros <span id="platformLabel">Cesium</span></div>
 
-        <div style="margin-top: 12px;">
-          <label for="area">Área</label>
-          <input id="area" type="text" value="Pcb%" autocomplete="off" />
+        <div id="cesiumParams">
+          <label for="location">Location</label>
+          <input id="location" type="text" value="FJZ" autocomplete="off" />
+
+          <div style="margin-top: 12px;">
+            <label for="area">Área</label>
+            <input id="area" type="text" value="Pcb%" autocomplete="off" />
+            <div class="quick-row">
+              <button class="quick-btn active" type="button" data-area="Pcb%">PCB%</button>
+              <button class="quick-btn" type="button" data-area="Sys%">SYS%</button>
+              <button class="quick-btn" type="button" data-area="">Vacío</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="geniusParams" class="hidden">
+          <label for="geniusArea">Área</label>
+          <input id="geniusArea" type="text" value="PCBST" autocomplete="off" />
           <div class="quick-row">
-            <button class="quick-btn active" type="button" data-area="Pcb%">PCB%</button>
-            <button class="quick-btn" type="button" data-area="Sys%">SYS%</button>
-            <button class="quick-btn" type="button" data-area="">Vacío</button>
+            <button class="quick-btn active" type="button" data-genius-area="PCBST">PCBST</button>
+            <button class="quick-btn" type="button" data-genius-area="SYST">SYST</button>
+          </div>
+
+          <div class="form-row">
+            <div>
+              <label for="resultType">Result Type</label>
+              <select id="resultType">
+                <option value="fail" selected>FAIL</option>
+                <option value="pass">PASS</option>
+                <option value="all">ALL</option>
+              </select>
+            </div>
+            <div>
+              <label for="dataType">Data Type</label>
+              <select id="dataType">
+                <option value="first" selected>FIRST</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -436,14 +505,14 @@
     <section class="card" style="margin-top: 16px;">
       <div class="card-title">UUT Types</div>
       <label for="uutTypes">Part numbers o familias separados por coma</label>
-      <textarea id="uutTypes" spellcheck="false" placeholder="Ej. 800-110045-%, 73-102885-%"></textarea>
-      <p class="hint">Se aceptan comodines con %. Las comas se conservan como separadores en la URL final.</p>
+      <textarea id="uutTypes" spellcheck="false" placeholder="Ej. 800-110045-%, 74-133408-02"></textarea>
+      <p class="hint" id="uutHint">Se aceptan comodines con %. Las comas se conservan como separadores en la URL final.</p>
     </section>
 
     <section class="card" style="margin-top: 16px;">
-      <div class="card-title">URL Generada</div>
+      <div class="card-title">URL Generada <span id="resultPlatform">Cesium</span></div>
       <textarea id="resultURL" class="result" readonly placeholder="La URL aparecerá aquí después de generar."></textarea>
-      <p class="hint">Formato aplicado: SI=UUT,Área,Location; datetype=week; yieldtype=firstpass; yielddatetype=rectime; timezone=US/Mountain.</p>
+      <p class="hint" id="resultHint">Formato Cesium: SI=UUT,Área,Location; datetype=week; yieldtype=firstpass; yielddatetype=rectime; timezone=US/Mountain.</p>
     </section>
   </main>
 
@@ -469,7 +538,8 @@
       LONGBALL: ["C9200CX%"],
       FRANKLIN: ["C9300L%", "STACK%"],
       CVEBU_73: ["73-102885-%", "73-102226-%", "73-103226-%", "73-102701-%", "73-102121-%", "73-103360-%", "73-104022-%", "73-101504-%", "73-102197-%"],
-      IOTBU_73: ["73-101441-%", "73-101439-%", "73-102239-%", "73-103098-%"]
+      IOTBU_73: ["73-101441-%", "73-101439-%", "73-102239-%", "73-103098-%"],
+      ODM: ["74-120717-02", "74-120728-02", "74-121188-03", "74-133408-02", "74-134450-04", "74-134450-05", "74-134451-05", "74-134452-05", "74-134454-05", "74-134454-06", "74-134455-05", "74-134456-05", "74-134456-06", "74-134702-02"]
     };
 
     const buGrid = document.getElementById("buGrid");
@@ -479,8 +549,20 @@
     const toDate = document.getElementById("toDate");
     const locationInput = document.getElementById("location");
     const areaInput = document.getElementById("area");
+    const geniusAreaInput = document.getElementById("geniusArea");
+    const resultTypeInput = document.getElementById("resultType");
+    const dataTypeInput = document.getElementById("dataType");
     const resultURL = document.getElementById("resultURL");
     const toast = document.getElementById("toast");
+    const statusPill = document.getElementById("statusPill");
+    const platformLabel = document.getElementById("platformLabel");
+    const resultPlatform = document.getElementById("resultPlatform");
+    const resultHint = document.getElementById("resultHint");
+    const uutHint = document.getElementById("uutHint");
+    const cesiumParams = document.getElementById("cesiumParams");
+    const geniusParams = document.getElementById("geniusParams");
+
+    let activePlatform = "cesium";
 
     function renderBUButtons() {
       buGrid.innerHTML = Object.keys(groups).map(name => (
@@ -501,6 +583,27 @@
     function clearBUSelection() {
       document.querySelectorAll(".bu-btn").forEach(btn => btn.classList.remove("active"));
       selectedBU.textContent = "Manual";
+    }
+
+    function setPlatform(platform) {
+      activePlatform = platform;
+      document.querySelectorAll("[data-platform]").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.platform === platform);
+      });
+
+      const isGenius = platform === "genius";
+      cesiumParams.classList.toggle("hidden", isGenius);
+      geniusParams.classList.toggle("hidden", !isGenius);
+      statusPill.textContent = isGenius ? "Genius Ready" : "Cesium Ready";
+      platformLabel.textContent = isGenius ? "Genius" : "Cesium";
+      resultPlatform.textContent = isGenius ? "Genius" : "Cesium";
+      uutHint.textContent = isGenius
+        ? "Los UUT Types se envían como una lista separada por comas dentro del parámetro uuttype de Genius."
+        : "Se aceptan comodines con %. Las comas se conservan como separadores en la URL final.";
+      resultHint.textContent = isGenius
+        ? "Formato Genius: data_type, user=genius, time_stamp, uuttype, area, result_type, startDate y endDate."
+        : "Formato Cesium: SI=UUT,Área,Location; datetype=week; yieldtype=firstpass; yielddatetype=rectime; timezone=US/Mountain.";
+      resultURL.value = "";
     }
 
     function formatDate(date) {
@@ -540,6 +643,15 @@
       showToast(value ? `Área ${value}` : "Área vacía");
     }
 
+    function setGeniusArea(value) {
+      geniusAreaInput.value = value;
+      document.querySelectorAll("[data-genius-area]").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.geniusArea === value);
+      });
+      resultURL.value = "";
+      showToast(`Área ${value}`);
+    }
+
     function getCleanList(value) {
       return value
         .split(",")
@@ -551,42 +663,53 @@
       return items.map(item => encodeURIComponent(item)).join(",");
     }
 
-    function generateURL() {
+    function getGeniusTimestamp() {
+      const now = new Date();
+      const pad = value => String(value).padStart(2, "0");
+      return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    }
+
+    function validateCommon() {
       const uutItems = getCleanList(uutInput.value);
-      const location = locationInput.value.trim();
-      const area = areaInput.value.trim();
       const start = fromDate.value;
       const end = toDate.value;
 
       if (!uutItems.length) {
         showToast("Agrega al menos un UUT Type", true);
-        return;
-      }
-
-      if (!location) {
-        showToast("Agrega location", true);
-        return;
+        return null;
       }
 
       if (!start || !end) {
         showToast("Selecciona fechas", true);
-        return;
+        return null;
       }
 
       if (new Date(start) > new Date(end)) {
         showToast("Start Date no puede ser mayor que End Date", true);
-        return;
+        return null;
       }
 
-      const encodedUUT = encodeList(uutItems);
+      return { uutItems, start, end };
+    }
+
+    function generateCesiumURL(common) {
+      const location = locationInput.value.trim();
+      const area = areaInput.value.trim();
+
+      if (!location) {
+        showToast("Agrega location", true);
+        return "";
+      }
+
+      const encodedUUT = encodeList(common.uutItems);
       const encodedLocation = encodeURIComponent(location);
       const encodedArea = encodeURIComponent(area);
       const siParts = [encodedUUT, encodedArea, encodedLocation].filter(Boolean).join(",");
 
-      const url = "https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield" +
+      return "https://cesium.cisco.com/apps/PolarisSearch/AdvanceYield" +
         `?SI=${siParts}` +
-        `&SD=${start}` +
-        `&ED=${end}` +
+        `&SD=${common.start}` +
+        `&ED=${common.end}` +
         "&datetype=week" +
         "&yieldtype=firstpass" +
         "&yielddatetype=rectime" +
@@ -594,10 +717,45 @@
         (area ? `&area=${encodedArea}` : "") +
         `&location=${encodedLocation}` +
         "&timezone=US%2FMountain";
+    }
+
+    function generateGeniusURL(common) {
+      const area = geniusAreaInput.value.trim();
+      const resultType = resultTypeInput.value;
+      const dataType = dataTypeInput.value;
+
+      if (!area) {
+        showToast("Agrega área de Genius", true);
+        return "";
+      }
+
+      const encodedUUT = encodeList(common.uutItems);
+      const timestamp = getGeniusTimestamp();
+
+      return "http://10.14.236.30/#/vision/advanced/sernumList" +
+        `?data_type=${encodeURIComponent(dataType)}` +
+        "&user=genius" +
+        `&time_stamp=${timestamp}` +
+        `&uuttype=${encodedUUT}` +
+        `&area=${encodeURIComponent(area)}` +
+        `&result_type=${encodeURIComponent(resultType)}` +
+        `&startDate=${common.start}` +
+        `&endDate=${common.end}`;
+    }
+
+    function generateURL() {
+      const common = validateCommon();
+      if (!common) return;
+
+      const url = activePlatform === "genius"
+        ? generateGeniusURL(common)
+        : generateCesiumURL(common);
+
+      if (!url) return;
 
       resultURL.value = url;
       copyURL(false);
-      showToast("URL generada");
+      showToast(`${activePlatform === "genius" ? "Genius" : "Cesium"} URL generada`);
     }
 
     async function copyURL(showEmptyMessage = true) {
@@ -637,6 +795,10 @@
       if (btn) selectBU(btn.dataset.bu);
     });
 
+    document.querySelectorAll("[data-platform]").forEach(btn => {
+      btn.addEventListener("click", () => setPlatform(btn.dataset.platform));
+    });
+
     document.querySelectorAll("[data-range]").forEach(btn => {
       btn.addEventListener("click", () => setRange(btn.dataset.range));
     });
@@ -645,13 +807,18 @@
       btn.addEventListener("click", () => setArea(btn.dataset.area));
     });
 
+    document.querySelectorAll("[data-genius-area]").forEach(btn => {
+      btn.addEventListener("click", () => setGeniusArea(btn.dataset.geniusArea));
+    });
+
     uutInput.addEventListener("input", () => {
       clearBUSelection();
       resultURL.value = "";
     });
 
-    [locationInput, areaInput, fromDate, toDate].forEach(input => {
+    [locationInput, areaInput, geniusAreaInput, resultTypeInput, dataTypeInput, fromDate, toDate].forEach(input => {
       input.addEventListener("input", () => resultURL.value = "");
+      input.addEventListener("change", () => resultURL.value = "");
     });
 
     document.getElementById("generateBtn").addEventListener("click", generateURL);
@@ -660,7 +827,9 @@
 
     setRange("yesterday");
     setArea("Pcb%");
+    setGeniusArea("PCBST");
     selectBU("IOTBU");
+    setPlatform("cesium");
   </script>
 </body>
 </html>
