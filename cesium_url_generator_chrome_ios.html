@@ -207,7 +207,7 @@
         const area=document.getElementById("geniusArea").value.trim(),result=document.getElementById("resultType").value,data=document.getElementById("dataType").value;
         if(!area){showToast("Agrega area de Genius",true);return}
         const uutParam=encodeURIComponent(uut.join(","));
-        url=`http://10.14.236.30/#/vision/advanced/sernumList?data_type=${encodeURIComponent(data)}&user=genius&time_stamp=${geniusTimestamp()}&uuttype=${uutParam}&area=${encodeURIComponent(area)}&result_type=${encodeURIComponent(result)}&startDate=${from}&endDate=${to}`;
+        url=`https://10.14.236.30/#/vision/advanced/sernumList?data_type=${encodeURIComponent(data)}&user=genius&time_stamp=${geniusTimestamp()}&uuttype=${uutParam}&area=${encodeURIComponent(area)}&result_type=${encodeURIComponent(result)}&startDate=${from}&endDate=${to}`;
       }else{
         const location=document.getElementById("location").value.trim(),area=document.getElementById("area").value.trim();
         if(!location){showToast("Agrega Location",true);return}
